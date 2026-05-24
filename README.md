@@ -11,7 +11,7 @@ This application provides an interactive web interface to process, visualize, an
 - **Interactive UI (Streamlit):** Upload, process, and plot Excel data directly from the browser.
 - **Dynamic Expression Filtering:** Use the sidebar to set Minimum Expression thresholds or select specific developmental stages (P15 to Adult).
 - **FlyBase API Integration:** A dedicated "Gene Details" tab fetches live metadata (FlyBase ID, Full Name, and biological summary) directly from Ensembl and the FlyBase REST API.
-- **KSG KNN Co-Regulation Analysis (🚧 Coming Soon):** We will be integrating a Kraskov-Stögbauer-Grassberger (KSG) K-Nearest Neighbors algorithm. This will allow us to mathematically detect complex, non-linear co-expression and regulation patterns across all target genes, directly pointing us to novel regulatory networks for wet-lab validation.
+- **KSG KNN Co-Regulation Analysis (Coming Soon):** We will be integrating a Kraskov-Stögbauer-Grassberger (KSG) K-Nearest Neighbors algorithm. This will allow us to mathematically detect complex, non-linear co-expression and regulation patterns across all target genes, directly pointing us to novel regulatory networks for wet-lab validation.
 
 ## Files and Scripts
 
