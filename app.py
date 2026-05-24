@@ -112,6 +112,9 @@ with tab1:
     3. Select genes to visualize.
     4. Switch to the **Expression Trend** tab.
     5. Visit the **Gene Details** tab for live FlyBase metadata.
+    
+    ### 🚧 Coming Soon: KSG KNN Co-Regulation Analysis
+    We will soon be integrating a Kraskov-Stögbauer-Grassberger (KSG) K-Nearest Neighbors algorithm to automatically detect complex, non-linear co-expression and regulation patterns across all targets. This will help uncover hidden regulatory networks and guide future wet-lab investigations!
     """)
 
 with tab3:
