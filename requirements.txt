@@ -5,3 +5,9 @@ openpyxl
 streamlit
 plotly
 pytest
+scipy
+xlrd >= 2.0.1
+statsmodels
+
+
+

@@ -11,7 +11,13 @@ This application provides an interactive web interface to process, visualize, an
 - **Interactive UI (Streamlit):** Upload, process, and plot Excel data directly from the browser.
 - **Dynamic Expression Filtering:** Use the sidebar to set Minimum Expression thresholds or select specific developmental stages (P15 to Adult).
 - **FlyBase API Integration:** A dedicated "Gene Details" tab fetches live metadata (FlyBase ID, Full Name, and biological summary) directly from Ensembl and the FlyBase REST API.
-- **KSG KNN Co-Regulation Analysis (Coming Soon):** We will be integrating a Kraskov-Stögbauer-Grassberger (KSG) K-Nearest Neighbors algorithm. This will allow us to mathematically detect complex, non-linear co-expression and regulation patterns across all target genes, directly pointing us to novel regulatory networks for wet-lab validation.
+- **Co-expression Analysis (Pearson & KSG Mutual Information):**
+  - **Pearson Correlation ($r$):** Measures the linear association between expression profiles of genes $X$ and $Y$:
+    $$r = \frac{\sum (x_i - \bar{x})(y_i - \bar{y})}{\sqrt{\sum (x_i - \bar{x})^2 \sum (y_i - \bar{y})^2}}$$
+  - **KSG KNN Mutual Information (MI):** Estimates the shared information $I(X; Y) = \iint p(x,y) \log \frac{p(x,y)}{p(x)p(y)} dx dy$ via Kraskov-Stögbauer-Grassberger (KSG) estimator using 3-nearest neighbors:
+    $$I^{(1)}(X;Y) = \psi(k) - \frac{1}{N}\sum_{i=1}^N \left[ \psi(n_x(i) + 1) + \psi(n_y(i) + 1) \right] + \psi(N)$$
+  - **Why KSG KNN is More Useful in Biology:** Biological systems exhibit highly non-linear dynamics such as thresholded activation, saturation plateaus, feedback loops, and multi-stable toggles. Pearson correlation ($r$) can easily fail to detect these relationships (returning values close to $0$), whereas KSG Mutual Information successfully captures them by analyzing shared information without assuming a linear form.
+
 
 ## Files and Scripts
 
