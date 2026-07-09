@@ -11,6 +11,8 @@ import networkRouter from './routes/network.js';
 import healthRouter from './routes/health.js';
 import cacheRouter from './routes/cache.js';
 import coexpressionRouter from './routes/coexpression.js';
+import geoRouter from './routes/geo.js';
+import datasetsRouter from './routes/datasets.js';
 
 const app = express();
 
@@ -45,6 +47,8 @@ app.use('/api/network', networkRouter);
 app.use('/api/health', healthRouter);
 app.use('/api/cache', cacheRouter);
 app.use('/api/coexpression', coexpressionRouter);
+app.use('/api/geo', geoRouter);
+app.use('/api/datasets', datasetsRouter);
 
 // ── 404 ──────────────────────────────────────────────────────────────
 

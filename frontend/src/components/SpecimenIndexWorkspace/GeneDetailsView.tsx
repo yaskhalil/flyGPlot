@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { apiClient } from '../../services/apiClient';
 import { ExternalLink, Loader, Info, ChevronDown, ChevronRight } from 'lucide-react';
+import { IGVBrowser } from '../IGVBrowser/IGVBrowser';
 
 interface GeneDetailsViewProps {
   isEmbedded?: boolean;
@@ -264,6 +265,32 @@ export function GeneDetailsView({ isEmbedded = false }: GeneDetailsViewProps) {
                             </span>
                           ))}
                         </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* ─── IGV Genome Browser ─── */}
+                {metadata?.chromosome && (
+                  <div style={{
+                    border: '1px solid var(--border-color)', borderRadius: '4px',
+                    background: 'var(--bg-card)', overflow: 'hidden',
+                  }}>
+                    <div
+                      style={{
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        padding: '0.6rem 0.75rem', background: 'var(--bg-tertiary)',
+                        borderBottom: '1px solid var(--border-color)', cursor: 'pointer',
+                        fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 700,
+                      }}
+                      onClick={() => toggleSection('genomeBrowser' as any)}
+                    >
+                      <span>GENOME_BROWSER — {lookupGene}</span>
+                      {expandedSections.goTerms ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                    </div>
+                    {expandedSections.goTerms && (
+                      <div style={{ padding: '0.5rem' }}>
+                        <IGVBrowser gene={lookupGene} genome="dm6" height={220} />
                       </div>
                     )}
                   </div>
