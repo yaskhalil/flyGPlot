@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlyGPlot Ledger - Frontend Scaffold</title>
+  <link rel="stylesheet" href="index.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* Lavish specific styles for feedback surface */
+    .lavish-panel {
+      position: absolute;
+      bottom: 2rem;
+      right: 2rem;
+      background: var(--bg-card);
+      border: 2px solid var(--primary);
+      border-radius: 4px;
+      padding: 1rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 1000;
+      max-width: 350px;
+    }
+    .lavish-header {
+      font-family: var(--font-serif);
+      font-weight: bold;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .lavish-form textarea {
+      width: 100%;
+      height: 80px;
+      margin-bottom: 0.5rem;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      padding: 0.5rem;
+      resize: vertical;
+    }
+    .workspace-preview {
+      display: none;
+    }
+    .workspace-preview.active {
+      display: block;
+    }
+    .stat-box {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 0.75rem;
+      text-align: center;
+    }
+    .stat-value {
+      font-family: var(--font-mono);
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: var(--primary);
+    }
+    .stat-label {
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      margin-top: 0.25rem;
+    }
+    .action-bar {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      border-top: 1px dashed var(--border-color);
+      padding-top: 1rem;
+    }
+    .quick-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .quick-list li {
+      padding: 0.5rem;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.8rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+    .quick-list li:hover {
+      background: var(--bg-tertiary);
+    }
+    .toolbar-btn {
+      background: none;
+      border: 1px solid var(--border-color);
+      padding: 0.25rem 0.5rem;
+      border-radius: 3px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .toolbar-btn:hover {
+      background: var(--bg-card);
+      color: var(--text-primary);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar Scaffold -->
+    <aside class="sidebar">
+      <div class="sidebar-title">
+        <div class="sidebar-title-text">
+          <i data-lucide="compass" style="color: var(--secondary)"></i>
+          <span>FlyGPlot Ledger</span>
+        </div>
+        <span class="sidebar-subtitle">Lab Notebook & Logs</span>
+      </div>
+
+      <div class="sidebar-section" style="background-color: transparent; border: none; padding: 0; box-shadow: none;">
+        <div class="sidebar-section-title" style="padding-left: 0.25rem;">
+          <span>Ledger Chapters</span>
+        </div>
+        <nav class="sidebar-nav">
+          <button class="sidebar-nav-btn active" onclick="switchTab('specimen', this)">
+            <i data-lucide="dna" width="14"></i>
+            <span>01_SPECIMEN_INDEX</span>
+          </button>
+          <button class="sidebar-nav-btn" onclick="switchTab('ledger', this)">
+            <i data-lucide="bar-chart-2" width="14"></i>
+            <span>02_LEDGER_CHARTS</span>
+          </button>
+          <button class="sidebar-nav-btn" onclick="switchTab('coexp', this)">
+            <i data-lucide="compass" width="14"></i>
+            <span>03_COEXP_WORKBENCH</span>
+          </button>
+        </nav>
+      </div>
+
+      <div class="divider" style="margin: 0.25rem 0 0.75rem 0;"></div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">
+          <span>Filter Rules</span>
+          <i data-lucide="chevron-down" width="12"></i>
+        </div>
+        
+        <div class="sidebar-section-content" style="display: flex; flex-direction: column; gap: 0.85rem; margin-top: 0.5rem;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="font-size: 0.68rem;">Stages Array</label>
+            <div class="stage-badge-container">
+              <span class="stage-badge selected">E_0_4</span>
+              <span class="stage-badge">E_4_8</span>
+              <span class="stage-badge selected">L1</span>
+              <span class="stage-badge">L2</span>
+              <span class="stage-badge">P15</span>
+              <span class="stage-badge">Adult</span>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="font-size: 0.68rem;">Min Cutoff (0.50)</label>
+            <input type="range" min="0" max="5" step="0.05" value="0.5" style="width: 100%; accent-color: var(--primary);">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-checkbox-label">
+              <input type="checkbox" checked>
+              <span style="font-size: 0.7rem;">Filter &lt; 0.10</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider" style="margin: 0.25rem 0 0.75rem 0;"></div>
+
+      <div class="sidebar-section" style="flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; margin-bottom: 0;">
+        <div class="sidebar-section-title">
+          <span>Specimen Bag (3)</span>
+          <div style="display: flex; align-items: center; gap: 0.35rem;">
+            <span style="color: var(--error); cursor: pointer;" title="Clear active cohort"><i data-lucide="trash-2" width="12"></i></span>
+            <i data-lucide="chevron-down" width="12"></i>
+          </div>
+        </div>
+        
+        <div style="flex-grow: 1; background-color: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 3px; padding: 0.6rem; overflow-y: auto; font-size: 0.75rem; color: var(--text-primary); margin-top: 0.5rem; max-height: 180px; font-family: var(--font-mono);">
+          <div style="display: flex; flex-wrap: wrap; gap: 0.3rem;">
+            <span class="gene-chip">tin<span class="gene-chip-remove">&times;</span></span>
+            <span class="gene-chip">vnd<span class="gene-chip-remove">&times;</span></span>
+            <span class="gene-chip">pnr<span class="gene-chip-remove">&times;</span></span>
+          </div>
+        </div>
+        
+        <!-- Added Workspace Tools -->
+        <div class="action-bar" style="margin-top: 0.5rem; padding-top: 0.5rem;">
+          <button class="btn btn-secondary" style="flex: 1; font-size: 0.7rem; padding: 0.25rem;"><i data-lucide="download" width="12"></i> Export Bag</button>
+          <button class="btn btn-secondary" style="flex: 1; font-size: 0.7rem; padding: 0.25rem;"><i data-lucide="save" width="12"></i> Save Session</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Workspace Scaffold -->
+    <main class="main-panel">
+      <header class="main-header">
+        <div class="view-meta">
+          <span class="view-title" id="view-title">Notebook Specimen Index</span>
+          <span class="view-description" id="view-desc">Dataset diagnostics, mathematical definitions, and gene specimen selection.</span>
+        </div>
+        <div class="status-badge-container" style="display: flex; gap: 0.5rem; align-items: center;">
+          <button class="toolbar-btn" title="View Documentation"><i data-lucide="book-open" width="14"></i> Protocol Docs</button>
+          <div class="status-badge">
+            <span class="status-dot"></span>
+            <span style="margin-left: 0.4rem;">INDEX_STABLE</span>
+          </div>
+        </div>
+      </header>
+
+      <section class="tab-content">
+        <!-- 01 Specimen Index -->
+        <div id="tab-specimen" class="workspace-preview active">
+          <div class="dashboard-grid" style="grid-template-columns: 320px 1fr;">
+            <!-- Left Panel -->
+            <div class="dashboard-panel">
+              <div class="card" style="padding: 1.25rem; margin-bottom: 0;">
+                <h3 style="font-family: var(--font-mono); font-size: 0.85rem;"><i data-lucide="search" width="14"></i> SPECIMEN_QUERY</h3>
+                <div class="form-group" style="margin-top: 1rem;">
+                  <input type="text" class="form-input" placeholder="Search gene symbols, FBgn...">
+                </div>
+                <button class="btn btn-primary" style="width: 100%;">Fetch Specimen</button>
+              </div>
+              
+              <!-- Fills dead space with recent queries and shortcuts -->
+              <div class="card" style="padding: 1.25rem; flex-grow: 1;">
+                <h3 style="font-family: var(--font-mono); font-size: 0.85rem; margin-bottom: 1rem;"><i data-lucide="history" width="14"></i> RECENT_QUERIES</h3>
+                <ul class="quick-list">
+                  <li><span>FBgn0003716 (tin)</span> <i data-lucide="arrow-right" width="12"></i></li>
+                  <li><span>FBgn0003975 (vnd)</span> <i data-lucide="arrow-right" width="12"></i></li>
+                  <li><span>FBgn0003117 (pnr)</span> <i data-lucide="arrow-right" width="12"></i></li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Right Panel -->
+            <div class="dashboard-panel">
+              <div class="card" style="flex-grow: 1; display: flex; flex-direction: column;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <h2>Specimen Database Index</h2>
+                  <button class="btn btn-secondary" style="font-size: 0.75rem;"><i data-lucide="download-cloud" width="14"></i> Download DB Snapshot</button>
+                </div>
+                <p>Welcome to the FlyGPlot Ledger. The database contains aggregated expression data across multiple developmental stages.</p>
+                
+                <!-- Vital Information Dashboard -->
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1.5rem;">
+                  <div class="stat-box">
+                    <div class="stat-value">17,492</div>
+                    <div class="stat-label">Total Genes Indexed</div>
+                  </div>
+                  <div class="stat-box">
+                    <div class="stat-value">6</div>
+                    <div class="stat-label">Developmental Stages</div>
+                  </div>
+                  <div class="stat-box">
+                    <div class="stat-value">98.4%</div>
+                    <div class="stat-label">Data Quality Score</div>
+                  </div>
+                </div>
+
+                <div class="alert alert-info" style="margin-top: 1.5rem;">
+                  <i data-lucide="info" class="alert-info-icon" width="16"></i>
+                  <div><strong>Tip:</strong> You can add multiple genes to your Specimen Bag to compare them across the Ledger Charts and Co-expression Workbench.</div>
+                </div>
+
+                <!-- Preview Table / Hot Genes -->
+                <h3 style="font-family: var(--font-mono); font-size: 0.85rem; margin-top: 1.5rem; margin-bottom: 0.5rem;"><i data-lucide="zap" width="14"></i> HIGHLY_EXPRESSED_MARKERS</h3>
+                <div class="data-table-container">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Gene Symbol</th>
+                        <th>FlyBase ID</th>
+                        <th>Peak Stage</th>
+                        <th>Max Expr (TPM)</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td style="font-weight: bold;">Act5C</td>
+                        <td>FBgn0000042</td>
+                        <td>Adult</td>
+                        <td>12,450.2</td>
+                        <td><button class="toolbar-btn"><i data-lucide="plus" width="12"></i> Add</button></td>
+                      </tr>
+                      <tr>
+                        <td style="font-weight: bold;">RpL32</td>
+                        <td>FBgn0002626</td>
+                        <td>L1</td>
+                        <td>8,920.5</td>
+                        <td><button class="toolbar-btn"><i data-lucide="plus" width="12"></i> Add</button></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 02 Ledger Charts -->
+        <div id="tab-ledger" class="workspace-preview">
+          <div class="dashboard-grid" style="grid-template-columns: 280px 1fr;">
+            <!-- Left Panel -->
+            <div class="dashboard-panel">
+              <div class="card" style="padding: 1.25rem;">
+                <h3 style="font-family: var(--font-mono); font-size: 0.85rem;"><i data-lucide="settings" width="14"></i> PLOT_CONFIG</h3>
+                <div class="form-group" style="margin-top: 1rem;">
+                  <label class="form-label">Chart Type</label>
+                  <select class="form-select">
+                    <option>Line Chart (Trajectory)</option>
+                    <option>Heatmap (Matrix)</option>
+                    <option>Bar Chart (Stage Avg)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-checkbox-label">
+                    <input type="checkbox" checked>
+                    <span>Log2 Normalize</span>
+                  </label>
+                </div>
+                <div class="form-group">
+                  <label class="form-checkbox-label">
+                    <input type="checkbox">
+                    <span>Show Error Bars (SEM)</span>
+                  </label>
+                </div>
+                <button class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;"><i data-lucide="refresh-cw" width="14"></i> Render Plot</button>
+              </div>
+
+              <!-- Plot Statistics (Fills dead space) -->
+              <div class="card" style="padding: 1.25rem; flex-grow: 1;">
+                <h3 style="font-family: var(--font-mono); font-size: 0.85rem; margin-bottom: 1rem;"><i data-lucide="bar-chart" width="14"></i> PLOT_STATISTICS</h3>
+                <div style="font-size: 0.75rem; color: var(--text-secondary); display: flex; flex-direction: column; gap: 0.75rem;">
+                  <div style="display: flex; justify-content: space-between;">
+                    <span>Global Mean:</span> <span style="font-family: var(--font-mono); color: var(--text-primary);">4.2 TPM</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between;">
+                    <span>Max Variance:</span> <span style="font-family: var(--font-mono); color: var(--text-primary);">Stage E_4_8</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between;">
+                    <span>Outliers:</span> <span style="font-family: var(--font-mono); color: var(--warning);">2 detected</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Panel -->
+            <div class="dashboard-panel">
+              <div class="card instrument-screen" style="flex-grow: 1; display: flex; flex-direction: column; min-height: 500px; padding: 0;">
+                <!-- Instrument Toolbar -->
+                <div style="display: flex; justify-content: space-between; padding: 0.5rem 1rem; border-bottom: 1px solid rgba(0,0,0,0.1); background: rgba(255,255,255,0.5);">
+                  <div style="display: flex; gap: 0.5rem;">
+                    <button class="toolbar-btn"><i data-lucide="zoom-in" width="14"></i></button>
+                    <button class="toolbar-btn"><i data-lucide="zoom-out" width="14"></i></button>
+                    <button class="toolbar-btn"><i data-lucide="maximize" width="14"></i> Fit</button>
+                  </div>
+                  <div style="display: flex; gap: 0.5rem;">
+                    <button class="toolbar-btn"><i data-lucide="camera" width="14"></i> Export PNG</button>
+                    <button class="toolbar-btn"><i data-lucide="file-text" width="14"></i> Export CSV</button>
+                  </div>
+                </div>
+                
+                <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; position: relative;">
+                  <div style="text-align: center; color: var(--text-muted); font-family: var(--font-mono);">
+                    <i data-lucide="line-chart" width="48" style="opacity: 0.5; margin-bottom: 1rem; margin-left: auto; margin-right: auto; display: block;"></i>
+                    <p>MILLIMETER_GRAPH_PAPER_MOUNTED</p>
+                    <p style="font-size: 0.75rem; margin-top: 0.5rem;">Select genes in Specimen Bag and click Render Plot.</p>
+                  </div>
+                  
+                  <!-- Mocking a plotted line -->
+                  <svg width="80%" height="60%" style="position: absolute; opacity: 0.2;" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <polyline fill="none" stroke="var(--secondary)" stroke-width="2" points="0,90 20,60 40,30 60,80 80,40 100,20" />
+                    <polyline fill="none" stroke="var(--error)" stroke-width="2" points="0,80 20,70 40,50 60,20 80,50 100,10" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 03 Coexp Workbench -->
+        <div id="tab-coexp" class="workspace-preview">
+          <div class="dashboard-grid" style="grid-template-columns: 320px 1fr;">
+            <!-- Left Panel -->
+            <div class="dashboard-panel">
+              <div class="card" style="padding: 1.25rem;">
+                <h3 style="font-family: var(--font-mono); font-size: 0.85rem;"><i data-lucide="compass" width="14"></i> CORRELATION_CONSOLE</h3>
+                <div class="toggle-group" style="margin: 1rem 0;">
+                  <button class="toggle-group-btn active">Heatmap</button>
+                  <button class="toggle-group-btn">Scatter</button>
+                  <button class="toggle-group-btn">Network</button>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Reference Gene</label>
+                  <select class="form-select">
+                    <option>tin (FBgn0003716)</option>
+                    <option>vnd (FBgn0003975)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Metric</label>
+                  <select class="form-select">
+                    <option>Pearson Correlation</option>
+                    <option>Spearman Rank</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label" style="font-size: 0.68rem;">Min Abs Score (0.80)</label>
+                  <input type="range" min="0" max="1" step="0.05" value="0.8" style="width: 100%; accent-color: var(--primary);">
+                </div>
+              </div>
+
+              <!-- Pathway / Enrichment Info (Fills dead space) -->
+              <div class="card" style="flex-grow: 1; padding: 1.25rem;">
+                <h3 style="font-family: var(--font-mono); font-size: 0.85rem; margin-bottom: 1rem;"><i data-lucide="git-merge" width="14"></i> PATHWAY_ENRICHMENT</h3>
+                <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.75rem;">Top GO terms for highly correlated partners:</p>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                  <div style="background: var(--bg-tertiary); padding: 0.5rem; border-radius: 3px; border: 1px solid var(--border-color); font-size: 0.75rem;">
+                    <strong>Heart Development</strong> (GO:0007507)
+                    <div style="color: var(--success); font-family: var(--font-mono); margin-top: 0.2rem;">p-val: 1.2e-8</div>
+                  </div>
+                  <div style="background: var(--bg-tertiary); padding: 0.5rem; border-radius: 3px; border: 1px solid var(--border-color); font-size: 0.75rem;">
+                    <strong>Mesoderm Morphogenesis</strong> (GO:0048332)
+                    <div style="color: var(--success); font-family: var(--font-mono); margin-top: 0.2rem;">p-val: 3.4e-6</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Panel -->
+            <div class="dashboard-panel">
+              <div class="card" style="flex-grow: 1; display: flex; flex-direction: column;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1rem;">
+                  <h3>Co-expression Results for 'tin'</h3>
+                  <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-secondary" style="font-size: 0.7rem; padding: 0.25rem 0.5rem;"><i data-lucide="plus-square" width="14"></i> Add Top 10 to Bag</button>
+                    <button class="btn btn-secondary" style="font-size: 0.7rem; padding: 0.25rem 0.5rem;"><i data-lucide="download" width="14"></i> TSV</button>
+                  </div>
+                </div>
+                
+                <div class="data-table-container" style="flex-grow: 1; max-height: 350px;">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Partner Gene</th>
+                        <th>Pearson Score</th>
+                        <th>Shared Pathways</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr class="selected">
+                        <td style="font-weight: 600;">pnr</td>
+                        <td style="color: var(--success);">0.9432</td>
+                        <td>4</td>
+                        <td><button class="toolbar-btn"><i data-lucide="eye" width="12"></i> Plot</button></td>
+                      </tr>
+                      <tr>
+                        <td style="font-weight: 600;">twi</td>
+                        <td style="color: var(--success);">0.8810</td>
+                        <td>2</td>
+                        <td><button class="toolbar-btn"><i data-lucide="eye" width="12"></i> Plot</button></td>
+                      </tr>
+                      <tr>
+                        <td style="font-weight: 600;">sls</td>
+                        <td style="color: var(--success);">0.8105</td>
+                        <td>1</td>
+                        <td><button class="toolbar-btn"><i data-lucide="eye" width="12"></i> Plot</button></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Network Preview (Fills dead space at bottom) -->
+                <div style="margin-top: 1.5rem; border: 1px dashed var(--border-color); border-radius: 4px; padding: 1rem; background: var(--bg-tertiary); text-align: center; color: var(--text-secondary);">
+                  <i data-lucide="share-2" width="24" style="margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                  <p style="font-family: var(--font-mono); font-size: 0.75rem; font-weight: bold;">NETWORK_TOPOLOGY_PREVIEW</p>
+                  <p style="font-size: 0.75rem; margin-top: 0.5rem;">Select multiple partners to render interactive correlation network.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Lavish Feedback Panel -->
+  <div class="lavish-panel" style="display: none;">
+    <div class="lavish-header">Frontend Scaffold Review</div>
+    <div style="font-size: 0.85rem; margin-bottom: 1rem; color: var(--text-secondary);">
+      Please review the proposed frontend structure, layout, and functionality.
+    </div>
+    <form class="lavish-form" data-lavish-action="submit-feedback">
+      <label style="font-family: var(--font-mono); font-size: 0.75rem; font-weight: bold; display: block; margin-bottom: 0.25rem;">Your Feedback:</label>
+      <textarea name="feedback" placeholder="Does this layout match the intended functionality? Any changes needed?"></textarea>
+      <button type="submit" class="btn btn-primary" style="width: 100%;">Submit Feedback</button>
+    </form>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.workspace-preview').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.sidebar-nav-btn').forEach(el => el.classList.remove('active'));
+      
+      document.getElementById('tab-' + tabId).classList.add('active');
+      btn.classList.add('active');
+
+      const titleEl = document.getElementById('view-title');
+      const descEl = document.getElementById('view-desc');
+
+      if (tabId === 'specimen') {
+        titleEl.textContent = 'Notebook Specimen Index';
+        descEl.textContent = 'Dataset diagnostics, mathematical definitions, and gene specimen selection.';
+      } else if (tabId === 'ledger') {
+        titleEl.textContent = 'Ledger Plotter Workbench';
+        descEl.textContent = 'Millimeter graph paper plotter for expression profiles and developmental trajectories.';
+      } else if (tabId === 'coexp') {
+        titleEl.textContent = 'Co-expression Laboratory';
+        descEl.textContent = 'Transcription factor correlation matrices, scatter plots, and linear regression fits.';
+      }
+    }
+  </script>
+</body>
+</html>

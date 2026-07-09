@@ -4,3 +4,11 @@ __pycache__/
 .pytest_cache/
 .DS_Store
 combined_expression.csv
+node_modules/
+dist/
+.env
+server/cache/data/
+server/node_modules/
+frontend/node_modules/
+frontend/dist/
+*.log

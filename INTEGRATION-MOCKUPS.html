@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fly TF Expression Explorer — Integration Mockups</title>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #e8e7e1;
+    --bg-secondary: #f3f1eb;
+    --bg-card: #fcfbfa;
+    --bg-tertiary: #f4f2eb;
+    --border-color: #c5c3ba;
+    --border-hover: #a19f95;
+    --text-primary: #1e2229;
+    --text-secondary: #4d5663;
+    --text-muted: #858e99;
+    --primary: #2e3440;
+    --secondary: #1d4ed8;
+    --secondary-bg: rgba(29,78,216,0.04);
+    --secondary-border: rgba(29,78,216,0.2);
+    --success: #0f766e;
+    --success-bg: rgba(15,118,110,0.04);
+    --warning: #b45309;
+    --warning-bg: rgba(180,83,9,0.04);
+    --error: #991b1b;
+    --error-bg: rgba(153,27,27,0.04);
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-serif: 'Lora', 'Georgia', serif;
+    --font-mono: 'Fira Mono', 'Courier New', monospace;
+    --paper-margin: #e06c75;
+    --shadow-flat: 1px 1px 0px rgba(0,0,0,0.1);
+    --shadow-page: 2px 2px 5px rgba(0,0,0,0.06);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-sans);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.5;
+  }
+
+  /* ── Global Header ── */
+  .global-header {
+    background: var(--bg-card);
+    border-bottom: 2px solid var(--border-color);
+    padding: 0.75rem 2rem;
+    display: flex; justify-content: space-between; align-items: center;
+    position: relative;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .global-header::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    background-image: radial-gradient(circle, var(--border-color) 40%, transparent 45%);
+    background-size: 20px 4px;
+  }
+  .global-header h1 {
+    font-family: var(--font-serif); font-size: 1.5rem; border: none; margin: 0;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .global-header .status {
+    font-family: var(--font-mono); font-size: 0.7rem;
+    background: var(--bg-tertiary); border: 1px solid var(--border-color);
+    padding: 0.25rem 0.55rem; border-radius: 3px; font-weight: 700;
+    display: flex; align-items: center; gap: 0.35rem;
+  }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+  .dot-green { background: var(--success); box-shadow: 0 0 4px var(--success); }
+  .dot-amber { background: var(--warning); box-shadow: 0 0 4px var(--warning); }
+  .dot-blue { background: var(--secondary); box-shadow: 0 0 4px var(--secondary); }
+
+  /* ── Page Section Headers ── */
+  .page-section {
+    max-width: 1400px; margin: 1.5rem auto; padding: 0 1.5rem;
+  }
+  .section-header {
+    display: flex; align-items: center; gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  .section-header h2 {
+    font-family: var(--font-serif); font-size: 1.3rem;
+    border-bottom: 3px double var(--border-color);
+    padding-bottom: 0.4rem; margin: 0;
+  }
+  .section-header .tag {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    background: var(--bg-card); border: 1px solid var(--border-color);
+    padding: 0.15rem 0.5rem; border-radius: 3px; font-weight: 600;
+  }
+  .tag-current { color: var(--secondary); border-color: var(--secondary-border); }
+  .tag-new { color: var(--success); }
+  .tag-new::before { content: '✦ '; }
+  .tag-future { color: var(--text-muted); }
+
+  /* ── Mock App Layout ── */
+  .mock-app {
+    display: flex; height: auto; min-height: 600px;
+    border: 2px solid var(--border-color); border-radius: 4px;
+    overflow: hidden; margin-bottom: 2rem;
+    box-shadow: var(--shadow-page);
+  }
+  .mock-sidebar {
+    width: 270px; background: var(--bg-secondary);
+    border-right: 2px solid var(--border-color);
+    padding: 1.25rem; flex-shrink: 0;
+  }
+  .mock-main {
+    flex: 1; background: var(--bg-primary);
+    padding: 1.5rem 1.75rem; overflow: auto;
+  }
+
+  /* ── Sidebar Mock ── */
+  .mock-sidebar-title {
+    font-family: var(--font-serif); font-size: 1.1rem; font-weight: 700;
+    border-bottom: 2px solid var(--text-primary);
+    padding-bottom: 0.5rem; margin-bottom: 1rem;
+    display: flex; align-items: center; gap: 0.4rem;
+  }
+  .mock-sidebar-sub {
+    font-family: var(--font-mono); font-size: 0.6rem; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--text-muted); font-weight: 600;
+    display: block; margin-top: 0.1rem;
+  }
+  .mock-nav-btn {
+    display: flex; align-items: center; gap: 0.5rem;
+    width: 100%; padding: 0.45rem 0.65rem; margin-bottom: 0.25rem;
+    background: var(--bg-tertiary); border: 1px solid var(--border-color);
+    border-radius: 3px; font-family: var(--font-mono); font-size: 0.72rem;
+    font-weight: 600; color: var(--text-secondary); cursor: default;
+    text-align: left;
+  }
+  .mock-nav-btn.active {
+    background: var(--bg-card); color: var(--secondary);
+    border-left: 3px solid var(--secondary);
+    box-shadow: var(--shadow-flat);
+  }
+
+  .mock-section {
+    background: var(--bg-card); border: 1px solid var(--border-color);
+    border-radius: 4px; padding: 0.75rem; margin-bottom: 0.85rem;
+    box-shadow: var(--shadow-flat);
+  }
+  .mock-section-title {
+    font-family: var(--font-mono); font-size: 0.65rem; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--text-secondary); font-weight: 700;
+    padding-bottom: 0.2rem; border-bottom: 1px solid var(--border-color);
+    margin-bottom: 0.6rem; display: flex; justify-content: space-between; align-items: center;
+  }
+  .mock-badge {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    padding: 0.12rem 0.35rem; border-radius: 3px;
+    font-family: var(--font-mono); font-size: 0.6rem; font-weight: 700;
+  }
+  .mock-badge-green { background: rgba(15,118,110,0.1); color: var(--success); }
+  .mock-badge-amber { background: rgba(180,83,9,0.1); color: var(--warning); }
+  .mock-badge-blue { background: rgba(29,78,216,0.1); color: var(--secondary); }
+  .mock-badge-red { background: rgba(153,27,27,0.1); color: var(--error); }
+
+  .mock-chip {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    padding: 0.2rem 0.4rem; background: var(--bg-tertiary); border-radius: 3px;
+    font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600;
+  }
+  .mock-chip .remove { color: var(--text-muted); margin-left: 0.15rem; cursor: default; }
+  .mock-chip.new-integration { border: 1px dashed var(--secondary); }
+
+  /* ── Main Content Cards ── */
+  .mock-card {
+    position: relative;
+    background: var(--bg-card); border: 1px solid var(--border-color);
+    border-left: 4px solid var(--paper-margin);
+    border-radius: 4px; padding: 1.25rem 1.25rem 1.25rem 2rem;
+    box-shadow: var(--shadow-page); margin-bottom: 1.25rem;
+  }
+  .mock-card h3 {
+    font-family: var(--font-mono); font-size: 0.85rem;
+    margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.4rem;
+  }
+  .mock-card .desc {
+    font-style: italic; font-size: 0.78rem; color: var(--text-secondary);
+    margin-bottom: 1rem;
+  }
+  .mock-card .mock-btn {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    padding: 0.4rem 0.8rem; border: 1px solid var(--border-color);
+    border-radius: 3px; font-family: var(--font-mono); font-size: 0.72rem;
+    font-weight: 700; cursor: default; background: var(--bg-tertiary);
+    color: var(--text-secondary);
+  }
+  .mock-card .mock-btn.primary {
+    background: var(--primary); color: #fff; border-color: var(--primary);
+  }
+  .mock-card .mock-btn.success {
+    background: var(--success); color: #fff; border-color: var(--success);
+  }
+  .mock-card .mock-btn.outline-blue {
+    background: transparent; border: 1px dashed var(--secondary);
+    color: var(--secondary);
+  }
+
+  /* ── Integration Badge ── */
+  .integration-badge {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    padding: 0.12rem 0.45rem; border-radius: 3px;
+    font-family: var(--font-mono); font-size: 0.6rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .int-new { background: rgba(29,78,216,0.08); color: var(--secondary); border: 1px dashed var(--secondary); }
+  .int-future { background: var(--bg-tertiary); color: var(--text-muted); }
+  .int-exists { background: rgba(15,118,110,0.08); color: var(--success); }
+
+  /* ── Table mock ── */
+  .mock-table {
+    width: 100%; border-collapse: collapse; font-size: 0.8rem;
+  }
+  .mock-table th {
+    background: var(--bg-tertiary); color: var(--text-muted);
+    text-align: left; padding: 0.4rem 0.6rem;
+    border-bottom: 2px solid var(--border-color);
+    font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700;
+    text-transform: uppercase;
+  }
+  .mock-table td {
+    padding: 0.35rem 0.6rem; border-bottom: 1px solid var(--border-color);
+  }
+
+  /* ── Stats Grid ── */
+  .mock-stats {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.75rem; margin-bottom: 1rem;
+  }
+  .mock-stat {
+    background: var(--bg-tertiary); border: 1px solid var(--border-color);
+    border-radius: 3px; padding: 0.6rem; text-align: center;
+  }
+  .mock-stat-val { font-size: 1.3rem; font-weight: 700; font-family: var(--font-mono); }
+  .mock-stat-label { font-family: var(--font-mono); font-size: 0.6rem; color: var(--text-muted); font-weight: 700; letter-spacing: 0.04em; }
+
+  /* ── Toggle Group ── */
+  .mock-toggle {
+    display: inline-flex; border: 1px solid var(--border-color);
+    border-radius: 4px; overflow: hidden; margin-bottom: 0.75rem;
+  }
+  .mock-toggle-btn {
+    padding: 0.35rem 0.65rem; font-family: var(--font-mono); font-size: 0.7rem;
+    font-weight: 700; border: none; background: var(--bg-tertiary);
+    color: var(--text-secondary); cursor: default;
+    &:not(:last-child) { border-right: 1px solid var(--border-color); }
+  }
+  .mock-toggle-btn.active {
+    background: var(--bg-card); color: var(--text-primary);
+    border-bottom: 2px solid var(--text-primary);
+  }
+
+  /* ── Plotly placeholder ── */
+  .mock-plot {
+    background: #faf9f6; border: 1px solid var(--border-color);
+    border-radius: 4px; padding: 0.75rem;
+    background-size: 20px 20px;
+    background-image:
+      linear-gradient(to right, rgba(0,0,0,0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(0,0,0,0.03) 1px, transparent 1px);
+    margin-bottom: 0.75rem;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 180px; color: var(--text-muted);
+    font-family: var(--font-mono); font-size: 0.7rem; text-align: center;
+    flex-direction: column; gap: 0.5rem;
+  }
+
+  /* ── Divider ── */
+  .mock-divider { border: none; border-top: 1px solid var(--border-color); margin: 0.75rem 0; }
+
+  /* ── Page Nav ── */
+  .page-nav {
+    display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+  }
+  .page-nav a {
+    font-family: var(--font-mono); font-size: 0.72rem; font-weight: 600;
+    padding: 0.35rem 0.75rem; border: 1px solid var(--border-color);
+    border-radius: 3px; text-decoration: none; color: var(--text-secondary);
+    background: var(--bg-card); cursor: pointer;
+    transition: all 0.1s;
+  }
+  .page-nav a:hover { border-color: var(--border-hover); color: var(--text-primary); }
+  .page-nav a.active {
+    background: var(--primary); color: #fff; border-color: var(--primary);
+  }
+
+  /* ── Legend ── */
+  .legend {
+    display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;
+    font-size: 0.75rem; color: var(--text-secondary);
+  }
+  .legend-item { display: flex; align-items: center; gap: 0.35rem; }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center; padding: 2rem; font-size: 0.75rem;
+    color: var(--text-muted); border-top: 1px solid var(--border-color);
+    margin-top: 2rem; font-family: var(--font-mono);
+  }
+
+  /* ── Print ── */
+  @media print {
+    .page-nav, .global-header { display: none; }
+    .mock-app { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="global-header">
+  <h1>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 1 10 10c0 5-4 8-10 8S2 17 2 12 7 2 12 2z"/><circle cx="12" cy="12" r="3"/></svg>
+    FlyGPlot Ledger
+    <span style="font-size: 0.7rem; font-family: var(--font-mono); color: var(--text-muted); font-weight: 400; margin-left: 0.5rem;">INTEGRATION_MOCKUPS v1.0</span>
+  </h1>
+  <div class="status">
+    <span class="status-dot dot-blue"></span>
+    <span>PROTOTYPE_ACTIVE</span>
+  </div>
+</header>
+
+<div class="page-section">
+  <div class="legend">
+    <span class="legend-item"><span class="integration-badge int-exists">● Existing</span> Already in the app</span>
+    <span class="legend-item"><span class="integration-badge int-new">✦ Phase 1</span> Quick win — 1-2 days</span>
+    <span class="legend-item"><span class="integration-badge" style="background:rgba(180,83,9,0.08);color:var(--warning);border:1px dashed var(--warning);">✦ Phase 2</span> Co-expression &amp; analysis</span>
+    <span class="legend-item"><span class="integration-badge int-future">○ Phase 3–4</span> Future enhancement</span>
+  </div>
+</div>
+
+<!-- ── PAGE NAV ── -->
+<div class="page-section">
+  <div class="page-nav">
+    <a href="#specimen" class="active">01_SPECIMEN_INDEX</a>
+    <a href="#ledger">02_LEDGER_CHARTS</a>
+    <a href="#coexp">03_COEXP_WORKBENCH</a>
+    <a href="#enrichment">04_ENRICHMENT_LAB</a>
+    <a href="#geo">05_GEO_IMPORTER</a>
+    <a href="#network">06_NETWORK_VIEW</a>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- PAGE 1: SPECIMEN INDEX -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<section id="specimen" class="page-section">
+  <div class="section-header">
+    <h2>01_SPECIMEN_INDEX</h2>
+    <span class="tag tag-current">CURRENT</span>
+    <span class="tag tag-new">FLYBASE API</span>
+  </div>
+
+  <div class="mock-app">
+    <!-- Sidebar -->
+    <div class="mock-sidebar">
+      <div class="mock-sidebar-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" stroke-width="2"><path d="M12 2a10 10 0 0 1 10 10c0 5-4 8-10 8S2 17 2 12 7 2 12 2z"/><circle cx="12" cy="12" r="3"/></svg>
+        FlyGPlot Ledger
+        <span class="mock-sidebar-sub">Lab Notebook &amp; Logs</span>
+      </div>
+
+      <div class="mock-nav-btn active"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> 01_SPECIMEN_INDEX</div>
+      <div class="mock-nav-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg> 02_LEDGER_CHARTS</div>
+      <div class="mock-nav-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/><path d="M12 2a10 10 0 0 1 10 10c0 5-4 8-10 8S2 17 2 12 7 2 12 2z"/></svg> 03_COEXP_WORKBENCH</div>
+
+      <hr class="mock-divider">
+
+      <div class="mock-section">
+        <div class="mock-section-title">Filter Rules</div>
+        <div style="font-size:0.72rem;font-family:var(--font-mono);color:var(--text-secondary);">
+          <div style="margin-bottom:0.5rem;"><strong>Stages:</strong> <span class="mock-badge mock-badge-green">P15</span> <span class="mock-badge mock-badge-green">P30</span> <span class="mock-badge mock-badge-green">P40</span> <span class="mock-badge mock-badge-amber">P50</span> <span class="mock-badge mock-badge-amber">P70</span> <span class="mock-badge" style="background:var(--bg-card);color:var(--text-muted);">Adult</span></div>
+          <div><strong>Min Cutoff:</strong> 0.50</div>
+        </div>
+      </div>
+
+      <div class="mock-section" style="flex:1;">
+        <div class="mock-section-title">
+          Specimen Bag (7)
+          <span style="cursor:default;color:var(--text-muted);font-size:0.65rem;">✕</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:0.3rem;">
+          <span class="mock-chip">ab <span class="remove">×</span></span>
+          <span class="mock-chip">abd-b <span class="remove">×</span></span>
+          <span class="mock-chip">achi <span class="remove">×</span></span>
+          <span class="mock-chip">acj6 <span class="remove">×</span></span>
+          <span class="mock-chip">Adf1 <span class="remove">×</span></span>
+          <span class="mock-chip">Aef1 <span class="remove">×</span></span>
+          <span class="mock-chip">CG45784 <span class="remove">×</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main -->
+    <div class="mock-main">
+      <div style="display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:1.5rem;align-items:start;">
+
+        <!-- Col 1: Data Config + Readme -->
+        <div style="display:flex;flex-direction:column;gap:1rem;">
+          <div class="mock-card" style="padding:1rem 1rem 1rem 1.5rem;">
+            <h3>Static Database Dimensions</h3>
+            <div style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:0.75rem;">Database matrices cached in-memory.</div>
+            <div style="display:grid;grid-template-columns:1fr;gap:0.5rem;">
+              <div class="mock-stat"><div class="mock-stat-val">13,521</div><div class="mock-stat-label">GENES_PARSED</div></div>
+              <div class="mock-stat"><div class="mock-stat-val">48</div><div class="mock-stat-label">CELL_CLUSTERS</div></div>
+              <div class="mock-stat"><div class="mock-stat-val">6</div><div class="mock-stat-label">STAGES_BOUNDED</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Col 2: Gene Selection -->
+        <div class="mock-card" style="padding:1rem 1rem 1rem 1.5rem;">
+          <h3>Gene Specimen Bag</h3>
+          <div class="mock-toggle">
+            <span class="mock-toggle-btn active">🔍 MANUAL_LOG</span>
+            <span class="mock-toggle-btn">🧬 BATCH_INPUT</span>
+          </div>
+          <div class="mock-section" style="padding:0.5rem;margin-bottom:0.75rem;">
+            <div style="font-family:var(--font-mono);font-size:0.7rem;color:var(--text-muted);margin-bottom:0.3rem;">Search index</div>
+            <div style="background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:3px;padding:0.35rem 0.5rem;font-family:var(--font-mono);font-size:0.72rem;color:var(--text-muted);">achi</div>
+            <div style="margin-top:0.3rem;background:var(--bg-card);border:1px solid var(--border-color);border-radius:3px;">
+              <div style="padding:0.3rem 0.5rem;font-family:var(--font-mono);font-size:0.7rem;color:var(--text-primary);">▸ achI</div>
+              <div style="padding:0.3rem 0.5rem;font-family:var(--font-mono);font-size:0.7rem;color:var(--text-secondary);border-top:1px solid var(--border-color);">▸ ache</div>
+              <div style="padding:0.3rem 0.5rem;font-family:var(--font-mono);font-size:0.7rem;color:var(--text-secondary);border-top:1px solid var(--border-color);">▸ achi</div>
+            </div>
+          </div>
+
+          <!-- ═══ ENRICHR NEW ═══ -->
+          <div style="border:2px dashed var(--secondary);border-radius:4px;padding:0.75rem;background:var(--secondary-bg);">
+            <div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.5rem;">
+              <span class="integration-badge int-new">✦ NEW</span>
+              <span style="font-family:var(--font-mono);font-size:0.75rem;font-weight:700;color:var(--secondary);">ENRICHR_ENRICHMENT</span>
+            </div>
+            <div style="display:flex;gap:0.5rem;align-items:center;">
+              <span class="mock-btn" style="background:var(--secondary);color:#fff;border-color:var(--secondary);">🧪 RUN_ENRICHMENT</span>
+              <span style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text-muted);">7 genes loaded</span>
+            </div>
+            <div style="margin-top:0.5rem;background:var(--bg-card);border:1px solid var(--border-color);border-radius:3px;padding:0.5rem;font-size:0.7rem;">
+              <div style="font-family:var(--font-mono);font-weight:700;margin-bottom:0.3rem;color:var(--text-primary);">GO_Biological_Process_2023</div>
+              <div style="display:flex;flex-direction:column;gap:0.2rem;font-size:0.68rem;color:var(--text-secondary);">
+                <div>1. neuron differentiation &mdash; <strong style="color:var(--text-primary);">p=1.2e-8</strong></div>
+                <div>2. axon guidance &mdash; <strong style="color:var(--text-primary);">p=3.4e-6</strong></div>
+                <div>3. transcription regulation &mdash; <strong style="color:var(--text-primary);">p=2.1e-4</strong></div>
+                <div style="color:var(--text-muted);font-size:0.65rem;">+ 12 more terms... <span class="mock-badge mock-badge-blue">Enrichr</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Col 3: FlyBase Details -->
+        <div class="mock-card" style="padding:1rem 1rem 1rem 1.5rem;">
+          <h3>
+            FlyBase Registry Record Sheet
+            <span class="integration-badge int-new" style="margin-left:0.5rem;">✦ FLYBASE_API</span>
+          </h3>
+          <div style="margin-bottom:0.75rem;">
+            <div style="font-family:var(--font-mono);font-size:0.7rem;color:var(--text-muted);margin-bottom:0.3rem;">Inspect Specimen</div>
+            <div style="background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:3px;padding:0.35rem 0.5rem;font-family:var(--font-mono);font-size:0.72rem;color:var(--text-primary);">achi ▾</div>
+          </div>
+          <div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+            <span class="mock-btn" style="background:var(--primary);color:#fff;border-color:var(--primary);">🔗 Open achi on FlyBase</span>
+            <span class="mock-btn outline-blue">🔗 Ensembl</span>
+          </div>
+          <div style="font-size:0.8rem;">
+            <div><strong>Approved Symbol:</strong> <code style="background:var(--bg-tertiary);padding:0.1rem 0.3rem;border-radius:2px;font-family:var(--font-mono);">achi</code></div>
+            <div style="margin-top:0.4rem;"><strong>Described Name:</strong> <span style="color:var(--text-primary);">achintya, achaete-scute homolog</span></div>
+            <div style="margin-top:0.4rem;"><strong>FlyBase Accession:</strong> <code style="background:var(--bg-tertiary);padding:0.1rem 0.3rem;border-radius:2px;font-family:var(--font-mono);">FBgn0000015</code></div>
+            <div style="margin-top:0.4rem;background:var(--bg-tertiary);border:1px dashed var(--border-color);border-radius:3px;padding:0.75rem;font-family:var(--font-mono);font-size:0.75rem;color:var(--text-secondary);">
+              <strong style="color:var(--text-primary);display:block;margin-bottom:0.3rem;">FlyBase/Ensembl Log Summary:</strong>
+              achintya (achi) encodes a basic helix-loop-helix (bHLH) transcription factor involved in neural precursor formation and asymmetric cell division.
+            </div>
+
+            <!-- ═══ NEW: FLYBASE EXTRA ═══ -->
+            <div style="margin-top:0.5rem;border:2px dashed var(--secondary);border-radius:4px;padding:0.65rem;background:var(--secondary-bg);">
+              <div style="display:flex;align-items:center;gap:0.3rem;margin-bottom:0.4rem;">
+                <span class="integration-badge int-new">✦ NEW</span>
+                <span style="font-family:var(--font-mono);font-size:0.7rem;font-weight:700;color:var(--secondary);">GO_TERMS &amp; PHENOTYPES</span>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:0.25rem;margin-bottom:0.4rem;">
+                <span class="mock-badge mock-badge-blue">GO:0000978 RNA pol II cis-reg</span>
+                <span class="mock-badge mock-badge-blue">GO:0007399 neurogenesis</span>
+                <span class="mock-badge mock-badge-blue">GO:0045944 transcription activation</span>
+              </div>
+              <div style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text-muted);">
+                <strong>Alleles:</strong> achi¹, achi², achi¹⁰⁰ &bull; <strong>Orthologs:</strong> ASCL1 (human), Ascl1 (mouse)
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- PAGE 2: LEDGER CHARTS -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<section id="ledger" class="page-section">
+  <div class="section-header">
+    <h2>02_LEDGER_CHARTS</h2>
+    <span class="tag tag-current">CURRENT</span>
+  </div>
+
+  <div class="mock-app">
+    <div class="mock-sidebar">
+      <div class="mock-sidebar-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" stroke-width="2"><path d="M12 2a10 10 0 0 1 10 10c0 5-4 8-10 8S2 17 2 12 7 2 12 2z"/><circle cx="12" cy="12" r="3"/></svg>
+        FlyGPlot Ledger
+        <span class="mock-sidebar-sub">Lab Notebook &amp; Logs</span>
+      </div>
+      <div class="mock-nav-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> 01_SPECIMEN_INDEX</div>
+      <div class="mock-nav-btn active"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg> 02_LEDGER_CHARTS</div>
+      <div class="mock-nav-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/><path d="M12 2a10 10 0 0 1 10 10c0 5-4 8-10 8S2 17 2 12 7 2 12 2z"/></svg> 03_COEXP_WORKBENCH</div>
+      <hr class="mock-divider">
+      <div class="mock-section">
+        <div class="mock-section-title">PLOTTER_CALIBRATION</div>
+        <div class="mock-toggle" style="width:100%;">
+          <span class="mock-toggle-btn active" style="flex:1;text-align:center;">Boxplot Ledger</span>
+          <span class="mock-toggle-btn" style="flex:1;text-align:center;">Trajectory Splines</span>
+        </div>
+        <label style="display:flex;align-items:center;gap:0.4rem;font-family:var(--font-mono);font-size:0.7rem;cursor:default;">
+          <input type="checkbox" checked style="accent-color:var(--text-primary);"> Pivot View: Group by Cell Type
+        </label>
+      </div>
+    </div>
+
+    <div class="mock-main">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+        <div class="mock-card" style="padding:1rem 1rem 1rem 1.5rem;">
+          <h3>Expression Profiles (Boxplot Ledger)</h3>
+          <div class="mock-plot" style="min-height:300px;">
+            <svg width="80" height="60" viewBox="0 0 80 60" style="opacity:0.4;">
+              <rect x="5" y="10" width="12" height="35" fill="none" stroke="var(--text-primary)" stroke-width="0.8"/>
+              <line x1="11" y1="10" x2="11" y2="45" stroke="var(--text-primary)" stroke-width="0.8"/>
+              <line x1="5" y1="22" x2="17" y2="22" stroke="var(--text-primary)" stroke-width="0.8"/>
+              <line x1="5" y1="32" x2="17" y2="32" stroke="var(--text-primary)" stroke-width="0.8"/>
+              <rect x="25" y="15" width="12" height="30" fill="none" stroke="var(--secondary)" stroke-width="0.8"/>
+              <rect x="45" y="8" width="12" height="40" fill="none" stroke="var(--success)" stroke-width="0.8"/>
+              <rect x="62" y="20" width="12" height="25" fill="none" stroke="var(--warning)" stroke-width="0.8"/>
+            </svg>
+            <div style="font-size:0.65rem;color:var(--text-muted);">[ plotly.js boxplot ] &bull; P15 &ndash; Adult stages across selected genes</div>
+          </div>
+        </div>
+        <div class="mock-card" style="padding:1rem 1rem 1rem 1.5rem;">
+          <h3>Developmental Trajectory</h3>
+          <div class="mock-plot" style="min-height:300px;">
+            <svg width="160" height="60" viewBox="0 0 160 60" style="opacity:0.4;">
+              <polyline points="10,40 35,25 60,35 85,18 110,28 135,10" fill="none" stroke="var(--secondary)" stroke-width="1.5"/>
+              <polyline points="10,45 35,30 60,42 85,22 110,32 135,15" fill="none" stroke="var(--error)" stroke-width="1" stroke-dasharray="3,2"/>
+              <circle cx="10" cy="40" r="2.5" fill="var(--secondary)"/>
+              <circle cx="35" cy="25" r="2.5" fill="var(--secondary)"/>
+              <circle cx="60" cy="35" r="2.5" fill="var(--secondary)"/>
+              <circle cx="85" cy="18" r="2.5" fill="var(--secondary)"/>
+              <circle cx="110" cy="28" r="2.5" fill="var(--secondary)"/>
+              <circle cx="135" cy="10" r="2.5" fill="var(--secondary)"/>
+            </svg>
+            <div style="font-size:0.65rem;color:var(--text-muted);">[ spline chart ] &bull; Target cell: Dm4 (#9)</div>
+          </div>
+        </div>
+      </div>
+      <!-- ═══ IGV GENOME BROWSER NEW ═══ -->
+      <div class="mock-card" style="padding:1rem 1rem 1rem 1.5rem;border:2px dashed var(--secondary);background:var(--secondary-bg);">
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;">
+          <span class="integration-badge int-new">✦ PHASE 4</span>
+          <h3 style="margin:0;color:var(--secondary);">IGV Genome Browser (achi locus)</h3>
+        </div>
+        <div class="mock-plot" style="min-height:140px;background:#faf9f6;">
+          <div style="display:flex;flex-direction:column;width:100%;gap:0.3rem;">
+            <div style="display:flex;font-size:0.6rem;font-family:var(--font-mono);color:var(--text-muted);">
+              <span style="width:80px;">chr2R:</span>
+              <span style="flex:1;border-bottom:1px solid var(--border-color);position:relative;">
+                <span style="position:absolute;left:20%;font-size:0.6rem;color:var(--secondary);">▸ achi</span>
+                <span style="position:absolute;right:10%;font-size:0.58rem;color:var(--text-muted);">21,456,000 &ndash; 21,462,000</span>
+              </span>
+            </div>
+            <div style="height:24px;background:var(--bg-tertiary);border-radius:2px;position:relative;margin-left:80px;">
+              <div style="position:absolute;left:35%;width:0.5px;height:24px;background:var(--secondary);"></div>
+              <div style="position:absolute;left:35%;top:4px;width:80px;height:16px;background:rgba(29,78,216,0.2);border:1px solid var(--secondary);border-radius:2px;"></div>
+              <div style="position:absolute;left:25%;top:0;width:0.3px;height:24px;background:var(--success);"></div>
+              <div style="position:absolute;left:55%;top:0;width:0.3px;height:24px;background:var(--success);"></div>
+              <div style="position:absolute;left:35%;bottom:-2px;height:6px;border-left:1px dashed var(--success);width:80px;border-bottom:1px dashed var(--success);border-right:1px dashed var(--success);"></div>
+            </div>
+            <div style="display:flex;gap:0.3rem;font-size:0.6rem;margin-left:80px;margin-top:0.2rem;">
+              <span class="mock-badge" style="background:rgba(29,78,216,0.1);color:var(--secondary);">RefSeq Genes</span>
+              <span class="mock-badge" style="background:rgba(15,118,110,0.1);color:var(--success);">RNA-seq Coverage</span>
+              <span class="mock-badge" style="background:rgba(180,83,9,0.1);color:var(--warning);">Chip-seq</span>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:0.68rem;color:var(--text-muted);font-family:var(--font-mono);">
+          <span class="mock-badge mock-badge-green">igv.js</span> Embedded genome browser via @igvteam/igv &bull; Drosophila dm6 genome
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- PAGE 3: CO-EXPRESSION WORKBENCH -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<section id="coexp" class="page-section">
+  <div class="section-header">
+    <h2>03_COEXP_WORKBENCH</h2>
+    <span class="tag tag-current">CURRENT</span>
+    <span class="tag tag-new">STRING-DB</span>
+  </div>
+
+  <div class="mock-app">
+    <div class="mock-sidebar">
+      <div class="mock-sidebar-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" stroke-width="2"><path d="M12 2a10 10 0 0 1 10 10c0 5-4 8-10 8S2 17 2 12 7 2 12 2z"/><circle cx="12" cy="12" r="3"/></svg>
+        FlyGPlot Ledger<span class="mock-sidebar-sub">Lab Notebook &amp; Logs</span>
+      </div>
+      <div class="mock-nav-btn">01_SPECIMEN_INDEX</div>
+      <div class="mock-nav-btn">02_LEDGER_CHARTS</div>
+      <div class="mock-nav-btn active">03_COEXP_WORKBENCH</div>
+      <hr class="mock-divider">
+      <div class="mock-section">
+        <div class="mock-section-title">CORRELATION_CONSOLE</div>
+        <div class="mock-toggle" style="width:100%;">
+          <span class="mock-toggle-btn active" style="flex:1;text-align:center;">Heatmap Matrix</span>
+          <span class="mock-toggle-btn" style="flex:1;text-align:center;">Scatter Dashboard</span>
+        </div>
+        <div style="margin-bottom:0.5rem;">
+          <div style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text-muted);margin-bottom:0.2rem;">Reference Gene</div>
+          <div style="background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:3px;padding:0.3rem 0.5rem;font-family:var(--font-mono);font-size:0.7rem;">achi ▾</div>
+        </div>
+        <div>
+          <div style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text-muted);margin-bottom:0.2rem;">Co-expression Metric</div>
+          <div style="background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:3px;padding:0.3rem 0.5rem;font-family:var(--font-mono);font-size:0.7rem;">Pearson Coefficient ▾</div>
+        </div>
+      </div>
+      <div class="mock-section" style="flex:1;">
+        <div class="mock-section-title">SEARCH_RESULTS (142)</div>
+        <div style="font-size:0.65rem;color:var(--text-muted);margin-bottom:0.5rem;font-style:italic;">Select a row to mount visual comparison.</div>
+        <div style="max-height:200px;overflow-y:auto;font-family:var(--font-mono);font-size:0.68rem;">
+          <table style="width:100%;border-collapse:collapse;">
+            <tr><td style="padding:0.25rem 0.3rem;border-bottom:1px solid var(--border-color);">ab</td><td style="padding:0.25rem 0.3rem;border-bottom:1px solid var(--border-color);color:var(--text-muted);">0.9241</td><td style="padding:0.25rem 0.3rem;border-bottom:1px solid var(--border-color);"><span class="integration-badge int-new" style="font-size:0.55rem;">STRING 0.98</span></td></tr>
+            <tr><td style="padding:0.25rem 0.3rem;border-bottom:1px solid var(--border-color);">acj6</td><td style="padding:0.25rem 0.3rem;border-bottom:1px solid var(--border-color);color:var(--text-muted);">0.8912</td><td style="padding:0.25rem 0.3rem;border-bottom:1px solid var(--border-color);"><span class="integration-badge int-new" style="font-size:0.55rem;">STRING 0.87</span></td></tr>
+            <tr><td style="padding:0.25rem 0.3rem;border-bottom:1px solid var(--border-color);">sens-2</td><td style="padding:0.25rem 0.3rem;border-bottom:1px solid var(--border-color);color:var(--text-muted);">0.8734</td><td style="padding:0.25rem 0.3rem;border-bottom:1px solid var(--border-color);"><span class="integration-badge int-new" style="font-size:0.55rem;">STRING 0.76</span></td></tr>
+            <tr style="background:var(--bg-card);"><td style="padding:0.25rem 0.3rem;border-bottom:1px solid var(--border-color);"><strong>abd-b</strong></td><td style="padding:0.25rem 0.3rem;border-bottom:1px solid var(--border-color);color:var(--text-muted);">0.8517</td><td style="padding:0.25rem 0.3rem;border-bottom:1px solid var(--border-color);"><span class="integration-badge int-new" style="font-size:0.55rem;">STRING 0.94</span></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="mock-main">
+      <div style="display:flex;flex-direction:column;gap:1rem;">
+        <div class="mock-card" style="padding:1rem 1rem 1rem 1.5rem;">
+          <h3>
+            REF: achi <span style="color:var(--text-muted);font-weight:400;">▸</span> PARTNER: abd-b
+            <span class="integration-badge int-new" style="margin-left:0.5rem;">✦ STRING_DB</span>
+          </h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div>
+              <div class="mock-plot" style="min-height:180px;">
+                <div style="display:flex;gap:0.75rem;align-items:center;">
+                  <svg width="80" height="80" viewBox="0 0 80 80" style="opacity:0.5;">
+                    <circle cx="30" cy="35" r="12" fill="none" stroke="var(--secondary)" stroke-width="1.2"/>
+                    <circle cx="55" cy="50" r="10" fill="none" stroke="var(--success)" stroke-width="1.2"/>
+                    <circle cx="50" cy="25" r="8" fill="none" stroke="var(--warning)" stroke-width="1.2"/>
+                    <circle cx="20" cy="55" r="9" fill="none" stroke="var(--error)" stroke-width="1.2"/>
+                    <line x1="30" y1="35" x2="55" y2="50" stroke="var(--border-color)" stroke-width="0.6"/>
+                    <line x1="30" y1="35" x2="50" y2="25" stroke="var(--border-color)" stroke-width="0.6"/>
+                    <line x1="55" y1="50" x2="20" y2="55" stroke="var(--border-color)" stroke-width="0.6"/>
+                  </svg>
+                  <div style="font-size:0.65rem;color:var(--text-muted);font-family:var(--font-mono);">
+                    [ scatter + regression ]<br>
+                    R² = 0.7234 &bull; N = 246<br>
+                    Slope: 0.8342
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="mock-plot" style="min-height:180px;">
+                <div style="font-size:0.65rem;color:var(--text-muted);font-family:var(--font-mono);">
+                  [ boxplot comparison ]<br>
+                  achi vs abd-b across stages
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ STRING-DB NETWORK SNIPPET ═══ -->
+        <div class="mock-card" style="padding:1rem 1rem 1rem 1.5rem;border:2px dashed var(--warning);background:rgba(180,83,9,0.03);">
+          <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;">
+            <span class="integration-badge" style="background:rgba(180,83,9,0.1);color:var(--warning);border:1px dashed var(--warning);">✦ PHASE 2</span>
+            <h3 style="margin:0;color:var(--warning);">STRING-DB Protein Interaction Network</h3>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1.5fr;gap:1rem;align-items:center;">
+            <div style="font-size:0.75rem;">
+              <div style="margin-bottom:0.5rem;"><strong>Top interaction partners for achi:</strong></div>
+              <table class="mock-table">
+                <tr><th>Partner</th><th>Score</th><th>Co-exp</th></tr>
+                <tr><td style="font-weight:600;">abd-b</td><td>0.94</td><td>0.8517</td></tr>
+                <tr><td style="font-weight:600;">acj6</td><td>0.87</td><td>0.8912</td></tr>
+                <tr><td style="font-weight:600;">sens-2</td><td>0.76</td><td>0.8734</td></tr>
+                <tr><td style="font-weight:600;">ab</td><td>0.98</td><td>0.9241</td></tr>
+              </table>
+              <div style="margin-top:0.5rem;">
+                <span class="mock-btn" style="background:var(--bg-card);border-color:var(--border-hover);">🔗 Open on STRING-DB</span>
+              </div>
+            </div>
+            <div class="mock-plot" style="min-height:150px;">
+              <svg width="200" height="120" viewBox="0 0 200 120" style="opacity:0.5;">
+                <circle cx="60" cy="40" r="18" fill="rgba(29,78,216,0.1)" stroke="var(--secondary)" stroke-width="1.5"/>
+                <text x="60" y="45" text-anchor="middle" font-size="8" fill="var(--text-primary)" font-family="monospace">achi</text>
+                <circle cx="35" cy="75" r="12" fill="rgba(15,118,110,0.1)" stroke="var(--success)" stroke-width="1"/>
+                <text x="35" y="79" text-anchor="middle" font-size="7" fill="var(--text-primary)" font-family="monospace">abd-b</text>
+                <circle cx="85" cy="70" r="12" fill="rgba(15,118,110,0.1)" stroke="var(--success)" stroke-width="1"/>
+                <text x="85" y="74" text-anchor="middle" font-size="7" fill="var(--text-primary)" font-family="monospace">acj6</text>
+                <circle cx="100" cy="40" r="9" fill="rgba(180,83,9,0.1)" stroke="var(--warning)" stroke-width="1"/>
+                <text x="100" y="44" text-anchor="middle" font-size="6" fill="var(--text-primary)" font-family="monospace">ab</text>
+                <circle cx="25" cy="30" r="8" fill="rgba(153,27,27,0.1)" stroke="var(--error)" stroke-width="1"/>
+                <line x1="60" y1="40" x2="35" y2="75" stroke="var(--secondary)" stroke-width="2" stroke-dasharray="4,2"/>
+                <line x1="60" y1="40" x2="85" y2="70" stroke="var(--secondary)" stroke-width="1.2"/>
+                <line x1="60" y1="40" x2="100" y2="40" stroke="var(--secondary)" stroke-width="1.8" stroke-dasharray="2,2"/>
+                <line x1="60" y1="40" x2="25" y2="30" stroke="var(--secondary)" stroke-width="0.8"/>
+              </svg>
+            </div>
+          </div>
+          <div style="font-size:0.68rem;color:var(--text-muted);font-family:var(--font-mono);margin-top:0.5rem;">
+            <span class="mock-badge mock-badge-amber">string-db.org/api</span> REST API &bull; Species: Drosophila melanogaster (7227) &bull; Score threshold: 400
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- PAGE 4: ENRICHMENT LAB (New Tab) -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<section id="enrichment" class="page-section">
+  <div class="section-header">
+    <h2>04_ENRICHMENT_LAB</h2>
+    <span class="tag tag-new">ENRICHR API</span>
+  </div>
+
+  <div class="mock-app">
+    <div class="mock-sidebar">
+      <div class="mock-sidebar-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" stroke-width="2"><path d="M12 2a10 10 0 0 1 10 10c0 5-4 8-10 8S2 17 2 12 7 2 12 2z"/><circle cx="12" cy="12" r="3"/></svg>
+        FlyGPlot Ledger<span class="mock-sidebar-sub">Lab Notebook &amp; Logs</span>
+      </div>
+      <div class="mock-nav-btn">01_SPECIMEN_INDEX</div>
+      <div class="mock-nav-btn">02_LEDGER_CHARTS</div>
+      <div class="mock-nav-btn">03_COEXP_WORKBENCH</div>
+      <div class="mock-nav-btn active">04_ENRICHMENT_LAB</div>
+      <hr class="mock-divider">
+      <div class="mock-section">
+        <div class="mock-section-title">ENRICHMENT_PANEL</div>
+        <div style="margin-bottom:0.5rem;">
+          <div style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text-muted);margin-bottom:0.2rem;">Gene Cohort</div>
+          <div style="background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:3px;padding:0.3rem;font-family:var(--font-mono);font-size:0.65rem;">
+            <span class="mock-chip">ab</span> <span class="mock-chip">abd-b</span> <span class="mock-chip">achi</span> <span class="mock-chip">acj6</span> <span class="mock-chip">+3</span>
+          </div>
+        </div>
+        <div style="margin-bottom:0.5rem;">
+          <div style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text-muted);margin-bottom:0.2rem;">Database</div>
+          <div style="background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:3px;padding:0.3rem 0.5rem;font-family:var(--font-mono);font-size:0.7rem;">GO_Biological_Process_2023 ▾</div>
+        </div>
+        <span class="mock-btn primary" style="width:100%;text-align:center;">🧪 RUN_ENRICHMENT</span>
+        <div style="margin-top:0.5rem;font-size:0.65rem;color:var(--text-muted);font-family:var(--font-mono);">
+          <span class="mock-badge mock-badge-green">Enrichr</span> Powered by maayanlab.cloud/Enrichr
+        </div>
+      </div>
+    </div>
+
+    <div class="mock-main">
+      <div class="mock-card" style="padding:1rem 1rem 1rem 1.5rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+          <h3 style="margin:0;">Enrichment Results — GO_Biological_Process_2023</h3>
+          <span class="mock-btn" style="background:var(--bg-card);">📥 Export CSV</span>
+        </div>
+        <table class="mock-table">
+          <tr><th>Rank</th><th>Term</th><th>P-value</th><th>Z-score</th><th>Combined</th><th>Overlapping Genes</th></tr>
+          <tr style="background:var(--success-bg);">
+            <td>1</td><td style="font-weight:600;">neuron differentiation (GO:0030182)</td>
+            <td style="font-family:var(--font-mono);color:var(--success);">1.2 × 10⁻⁸</td>
+            <td style="font-family:var(--font-mono);">-2.14</td>
+            <td style="font-family:var(--font-mono);">12.45</td>
+            <td><span class="mock-chip">achi</span> <span class="mock-chip">acj6</span> <span class="mock-chip">ab</span></td>
+          </tr>
+          <tr>
+            <td>2</td><td style="font-weight:600;">axon guidance (GO:0007411)</td>
+            <td style="font-family:var(--font-mono);color:var(--success);">3.4 × 10⁻⁶</td>
+            <td style="font-family:var(--font-mono);">-1.89</td>
+            <td style="font-family:var(--font-mono);">9.87</td>
+            <td><span class="mock-chip">achi</span> <span class="mock-chip">abd-b</span></td>
+          </tr>
+          <tr>
+            <td>3</td><td style="font-weight:600;">transcription by RNA pol II (GO:0006366)</td>
+            <td style="font-family:var(--font-mono);color:var(--success);">2.1 × 10⁻⁴</td>
+            <td style="font-family:var(--font-mono);">-1.56</td>
+            <td style="font-family:var(--font-mono);">7.23</td>
+            <td><span class="mock-chip">Adf1</span> <span class="mock-chip">Aef1</span></td>
+          </tr>
+          <tr>
+            <td>4</td><td style="font-weight:600;">asymmetric cell division (GO:0008356)</td>
+            <td style="font-family:var(--font-mono);color:var(--warning);">1.8 × 10⁻²</td>
+            <td style="font-family:var(--font-mono);">-1.12</td>
+            <td style="font-family:var(--font-mono);">4.56</td>
+            <td><span class="mock-chip">achi</span></td>
+          </tr>
+        </table>
+        <div style="margin-top:0.75rem;display:flex;gap:0.5rem;">
+          <span class="mock-btn outline-blue">🧬 GO_Molecular_Function</span>
+          <span class="mock-btn outline-blue">🧬 KEGG_Pathway</span>
+          <span class="mock-btn outline-blue">🧬 WikiPathway</span>
+        </div>
+        <div style="margin-top:0.5rem;font-size:0.68rem;color:var(--text-muted);font-family:var(--font-mono);">
+          <span class="mock-badge mock-badge-blue">Enrichr API</span> POST /addList → GET /enrich &bull; 7 genes submitted &bull; 3 databases queried
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- PAGE 5: GEO IMPORTER (New Tab) -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<section id="geo" class="page-section">
+  <div class="section-header">
+    <h2>05_GEO_IMPORTER</h2>
+    <span class="tag tag-new">NCBI E-UTILITIES</span>
+    <span class="tag tag-future">BACKEND NEEDED</span>
+  </div>
+
+  <div class="mock-app">
+    <div class="mock-sidebar">
+      <div class="mock-sidebar-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" stroke-width="2"><path d="M12 2a10 10 0 0 1 10 10c0 5-4 8-10 8S2 17 2 12 7 2 12 2z"/><circle cx="12" cy="12" r="3"/></svg>
+        FlyGPlot Ledger<span class="mock-sidebar-sub">Lab Notebook &amp; Logs</span>
+      </div>
+      <div class="mock-nav-btn">01_SPECIMEN_INDEX</div>
+      <div class="mock-nav-btn">02_LEDGER_CHARTS</div>
+      <div class="mock-nav-btn">03_COEXP_WORKBENCH</div>
+      <div class="mock-nav-btn">04_ENRICHMENT_LAB</div>
+      <div class="mock-nav-btn active">05_GEO_IMPORTER</div>
+      <hr class="mock-divider">
+      <div class="mock-section">
+        <div class="mock-section-title">GEO_SEARCH</div>
+        <div style="margin-bottom:0.5rem;">
+          <div style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text-muted);margin-bottom:0.2rem;">Query</div>
+          <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:3px;padding:0.3rem 0.5rem;font-family:var(--font-mono);font-size:0.7rem;color:var(--text-primary);">Drosophila melanogaster brain expression RNA-seq</div>
+        </div>
+        <span class="mock-btn primary" style="width:100%;text-align:center;">🔍 Search GEO Datasets</span>
+        <div style="margin-top:0.5rem;font-size:0.65rem;color:var(--text-muted);font-family:var(--font-mono);">
+          <span class="mock-badge mock-badge-blue">NCBI E-utilities</span> esearch / esummary
+        </div>
+      </div>
+    </div>
+
+    <div class="mock-main">
+      <div class="mock-card" style="padding:1rem 1rem 1rem 1.5rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+          <h3 style="margin:0;">Search Results (12 datasets)</h3>
+          <span style="font-size:0.7rem;color:var(--text-muted);font-family:var(--font-mono);">showing 5 of 12</span>
+        </div>
+        <table class="mock-table">
+          <tr><th>Accession</th><th>Title</th><th>Samples</th><th>Organism</th><th>Action</th></tr>
+          <tr>
+            <td style="font-family:var(--font-mono);font-weight:600;">GSE123456</td>
+            <td>Drosophila brain single-cell RNA-seq at embryonic stages</td>
+            <td>6</td>
+            <td>D. melanogaster</td>
+            <td><span class="mock-btn" style="padding:0.2rem 0.5rem;font-size:0.65rem;background:var(--success);color:#fff;border-color:var(--success);">Import</span></td>
+          </tr>
+          <tr>
+            <td style="font-family:var(--font-mono);font-weight:600;">GSE234567</td>
+            <td>Transcriptome profiling of Drosophila neural stem cells</td>
+            <td>4</td>
+            <td>D. melanogaster</td>
+            <td><span class="mock-btn" style="padding:0.2rem 0.5rem;font-size:0.65rem;background:var(--success);color:#fff;border-color:var(--success);">Import</span></td>
+          </tr>
+          <tr>
+            <td style="font-family:var(--font-mono);font-weight:600;">GSE345678</td>
+            <td>Developmental expression atlas across 6 stages (FlyAtlas)</td>
+            <td>12</td>
+            <td>D. melanogaster</td>
+            <td><span class="mock-btn" style="padding:0.2rem 0.5rem;font-size:0.65rem;background:var(--success);color:#fff;border-color:var(--success);">Import</span></td>
+          </tr>
+        </table>
+        <div style="margin-top:0.75rem;background:var(--bg-tertiary);border:1px dashed var(--border-color);border-radius:4px;padding:0.75rem;">
+          <div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.4rem;">
+            <span class="integration-badge int-future">○ PHASE 3</span>
+            <span style="font-family:var(--font-mono);font-size:0.75rem;font-weight:700;">DATA PIPELINE — Server-side cache</span>
+          </div>
+          <div style="font-size:0.7rem;color:var(--text-secondary);">
+            Imported datasets are preprocessed into the expression matrix format and cached in the backend SQLite database.<br>
+            <span style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text-muted);">Backend: Express server → /api/geo/search + /api/geo/import</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- PAGE 6: NETWORK VIEW (New Tab) -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<section id="network" class="page-section">
+  <div class="section-header">
+    <h2>06_NETWORK_VIEW</h2>
+    <span class="tag tag-new">STRING-DB + GENEMANIA</span>
+  </div>
+
+  <div class="mock-app">
+    <div class="mock-sidebar">
+      <div class="mock-sidebar-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" stroke-width="2"><path d="M12 2a10 10 0 0 1 10 10c0 5-4 8-10 8S2 17 2 12 7 2 12 2z"/><circle cx="12" cy="12" r="3"/></svg>
+        FlyGPlot Ledger<span class="mock-sidebar-sub">Lab Notebook &amp; Logs</span>
+      </div>
+      <div class="mock-nav-btn">01_SPECIMEN_INDEX</div>
+      <div class="mock-nav-btn">02_LEDGER_CHARTS</div>
+      <div class="mock-nav-btn">03_COEXP_WORKBENCH</div>
+      <div class="mock-nav-btn">04_ENRICHMENT_LAB</div>
+      <div class="mock-nav-btn">05_GEO_IMPORTER</div>
+      <div class="mock-nav-btn active">06_NETWORK_VIEW</div>
+      <hr class="mock-divider">
+      <div class="mock-section">
+        <div class="mock-section-title">NETWORK_CONTROLS</div>
+        <div style="margin-bottom:0.5rem;">
+          <div style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text-muted);margin-bottom:0.2rem;">Seed Gene</div>
+          <div style="background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:3px;padding:0.3rem 0.5rem;font-family:var(--font-mono);font-size:0.7rem;">achi ▾</div>
+        </div>
+        <div style="margin-bottom:0.5rem;">
+          <div style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text-muted);margin-bottom:0.2rem;">Database</div>
+          <div style="background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:3px;padding:0.3rem 0.5rem;font-family:var(--font-mono);font-size:0.7rem;">STRING-DB ▾</div>
+        </div>
+        <div style="margin-bottom:0.5rem;">
+          <div style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text-muted);margin-bottom:0.2rem;">Min. Interaction Score</div>
+          <input type="range" min="0" max="1000" value="400" style="width:100%;accent-color:var(--primary);">
+        </div>
+        <span class="mock-btn primary" style="width:100%;text-align:center;">🔄 Query Network</span>
+      </div>
+      <div class="mock-section">
+        <div class="mock-section-title">NETWORK_STATS</div>
+        <div class="mock-stats" style="grid-template-columns:1fr 1fr;">
+          <div class="mock-stat"><div class="mock-stat-val">24</div><div class="mock-stat-label">NODES</div></div>
+          <div class="mock-stat"><div class="mock-stat-val">68</div><div class="mock-stat-label">EDGES</div></div>
+        </div>
+        <div style="font-size:0.68rem;color:var(--text-secondary);font-family:var(--font-mono);">
+          Avg. clustering: 0.42 &bull; PPI enrichment: 3.2e-5
+        </div>
+      </div>
+    </div>
+
+    <div class="mock-main">
+      <div class="mock-card" style="padding:1rem 1rem 1rem 1.5rem;">
+        <h3>Network Graph — achi interaction partners</h3>
+        <div class="mock-plot" style="min-height:360px;">
+          <svg width="460" height="300" viewBox="0 0 460 300" style="opacity:0.6;">
+            <!-- Central node -->
+            <circle cx="230" cy="150" r="22" fill="rgba(29,78,216,0.15)" stroke="var(--secondary)" stroke-width="2"/>
+            <text x="230" y="155" text-anchor="middle" font-size="9" fill="var(--text-primary)" font-family="monospace" font-weight="bold">achi</text>
+            <!-- Surrounding nodes -->
+            <circle cx="330" cy="100" r="14" fill="rgba(15,118,110,0.12)" stroke="var(--success)" stroke-width="1.5"/>
+            <text x="330" y="105" text-anchor="middle" font-size="7" fill="var(--text-primary)" font-family="monospace">abd-b</text>
+            <circle cx="280" cy="60" r="12" fill="rgba(15,118,110,0.12)" stroke="var(--success)" stroke-width="1.5"/>
+            <text x="280" y="65" text-anchor="middle" font-size="7" fill="var(--text-primary)" font-family="monospace">acj6</text>
+            <circle cx="170" cy="70" r="11" fill="rgba(180,83,9,0.12)" stroke="var(--warning)" stroke-width="1.5"/>
+            <text x="170" y="75" text-anchor="middle" font-size="6" fill="var(--text-primary)" font-family="monospace">sens-2</text>
+            <circle cx="130" cy="140" r="13" fill="rgba(15,118,110,0.12)" stroke="var(--success)" stroke-width="1.5"/>
+            <text x="130" y="145" text-anchor="middle" font-size="7" fill="var(--text-primary)" font-family="monospace">ab</text>
+            <circle cx="160" cy="210" r="10" fill="rgba(153,27,27,0.12)" stroke="var(--error)" stroke-width="1.5"/>
+            <text x="160" y="215" text-anchor="middle" font-size="6" fill="var(--text-primary)" font-family="monospace">Adf1</text>
+            <circle cx="290" cy="220" r="10" fill="rgba(15,118,110,0.12)" stroke="var(--success)" stroke-width="1.5"/>
+            <text x="290" y="225" text-anchor="middle" font-size="6" fill="var(--text-primary)" font-family="monospace">Aef1</text>
+            <circle cx="380" cy="180" r="9" fill="rgba(180,83,9,0.12)" stroke="var(--warning)" stroke-width="1.5"/>
+            <text x="380" y="185" text-anchor="middle" font-size="6" fill="var(--text-primary)" font-family="monospace">CG45784</text>
+            <circle cx="360" cy="240" r="8" fill="rgba(180,83,9,0.12)" stroke="var(--warning)" stroke-width="1"/>
+            <text x="360" y="244" text-anchor="middle" font-size="5" fill="var(--text-primary)" font-family="monospace">esg</text>
+            <circle cx="90" cy="90" r="8" fill="rgba(180,83,9,0.12)" stroke="var(--warning)" stroke-width="1"/>
+            <text x="90" y="94" text-anchor="middle" font-size="5" fill="var(--text-primary)" font-family="monospace">Dll</text>
+            <!-- Edges -->
+            <line x1="230" y1="150" x2="330" y2="100" stroke="var(--secondary)" stroke-width="2.5" stroke-dasharray="5,3"/>
+            <line x1="230" y1="150" x2="280" y2="60" stroke="var(--secondary)" stroke-width="1.5"/>
+            <line x1="230" y1="150" x2="170" y2="70" stroke="var(--secondary)" stroke-width="1"/>
+            <line x1="230" y1="150" x2="130" y2="140" stroke="var(--secondary)" stroke-width="2" stroke-dasharray="5,3"/>
+            <line x1="230" y1="150" x2="160" y2="210" stroke="var(--secondary)" stroke-width="0.8"/>
+            <line x1="230" y1="150" x2="290" y2="220" stroke="var(--secondary)" stroke-width="1.2"/>
+            <line x1="230" y1="150" x2="380" y2="180" stroke="var(--secondary)" stroke-width="0.6"/>
+            <line x1="230" y1="150" x2="360" y2="240" stroke="var(--secondary)" stroke-width="0.5"/>
+            <line x1="230" y1="150" x2="90" y2="90" stroke="var(--secondary)" stroke-width="0.5"/>
+            <line x1="330" y1="100" x2="380" y2="180" stroke="rgba(0,0,0,0.08)" stroke-width="0.4"/>
+            <line x1="280" y1="60" x2="170" y2="70" stroke="rgba(0,0,0,0.08)" stroke-width="0.4"/>
+          </svg>
+        </div>
+        <div style="display:flex;gap:0.75rem;flex-wrap:wrap;font-size:0.68rem;color:var(--text-muted);font-family:var(--font-mono);">
+          <span>⬤ <span style="color:var(--secondary);">Seed gene</span></span>
+          <span>⬤ <span style="color:var(--success);">Strong interaction (≥0.9)</span></span>
+          <span>⬤ <span style="color:var(--warning);">Medium interaction (≥0.7)</span></span>
+          <span>⬤ <span style="color:var(--error);">Weak interaction (&lt;0.7)</span></span>
+          <span class="mock-badge mock-badge-amber">STRING-DB</span>
+          <span class="mock-badge mock-badge-blue">GeneMANIA</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- INTEGRATION SUMMARY TABLE -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<section class="page-section">
+  <div class="section-header">
+    <h2>Integration Summary</h2>
+  </div>
+  <div class="mock-card" style="padding:1.25rem;border-left:4px solid var(--secondary);">
+    <table class="mock-table">
+      <tr><th>Tool</th><th>Phase</th><th>API</th><th>Type</th><th>Effort</th><th>What It Adds</th></tr>
+      <tr>
+        <td style="font-weight:600;">FlyBase API</td>
+        <td><span class="integration-badge int-new">P1.1</span></td>
+        <td style="font-family:var(--font-mono);font-size:0.65rem;">REST</td>
+        <td>Annotation</td>
+        <td><span class="mock-badge mock-badge-green">1 day</span></td>
+        <td>GO terms, alleles, orthologs, richer metadata</td>
+      </tr>
+      <tr>
+        <td style="font-weight:600;">Enrichr</td>
+        <td><span class="integration-badge int-new">P2.2</span></td>
+        <td style="font-family:var(--font-mono);font-size:0.65rem;">REST</td>
+        <td>Enrichment</td>
+        <td><span class="mock-badge mock-badge-green">1 day</span></td>
+        <td>One-click GO/pathway enrichment for selected genes</td>
+      </tr>
+      <tr>
+        <td style="font-weight:600;">STRING-DB</td>
+        <td><span class="integration-badge" style="background:rgba(180,83,9,0.1);color:var(--warning);border:1px dashed var(--warning);">P2.1</span></td>
+        <td style="font-family:var(--font-mono);font-size:0.65rem;">REST</td>
+        <td>Networks</td>
+        <td><span class="mock-badge mock-badge-amber">2 days</span></td>
+        <td>PPI overlay on co-expression, network graph</td>
+      </tr>
+      <tr>
+        <td style="font-weight:600;">NCBI GEO</td>
+        <td><span class="integration-badge int-future">P3.1</span></td>
+        <td style="font-family:var(--font-mono);font-size:0.65rem;">E-utilities</td>
+        <td>Data</td>
+        <td><span class="mock-badge mock-badge-amber">3 days</span></td>
+        <td>Import public expression datasets</td>
+      </tr>
+      <tr>
+        <td style="font-weight:600;">Backend Server</td>
+        <td><span class="integration-badge int-future">P3.2</span></td>
+        <td style="font-family:var(--font-mono);font-size:0.65rem;">Express/FastAPI</td>
+        <td>Infra</td>
+        <td><span class="mock-badge mock-badge-amber">3 days</span></td>
+        <td>Cache, proxy, precompute — enable GEO, rate limiting</td>
+      </tr>
+      <tr>
+        <td style="font-weight:600;">IGV.js</td>
+        <td><span class="integration-badge int-future">P4.1</span></td>
+        <td style="font-family:var(--font-mono);font-size:0.65rem;">npm library</td>
+        <td>Visualization</td>
+        <td><span class="mock-badge mock-badge-amber">2 days</span></td>
+        <td>Embedded genome browser (isoforms, ChIP-seq, RNA-seq)</td>
+      </tr>
+    </table>
+  </div>
+</section>
+
+<div class="footer">
+  Fly TF Expression Explorer — Integration Mockups &bull; 2026-07-09 &bull; github.com/yaskhalil/flies
+</div>
+
+<script>
+  // Simple page nav highlight
+  document.querySelectorAll('.page-nav a').forEach(a => {
+    a.addEventListener('click', e => {
+      document.querySelectorAll('.page-nav a').forEach(x => x.classList.remove('active'));
+      a.classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>

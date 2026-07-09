@@ -1,0 +1,20 @@
+{
+  "name": "fly-expression-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Backend API for Fly TF Expression Explorer — wraps FlyBase, Ensembl, Enrichr, STRING-DB, NCBI GEO",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "test": "node --test routes/*.test.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.8.1",
+    "cors": "^2.8.6",
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0"
+  },
+  "keywords": ["drosophila", "bioinformatics", "gene-expression", "flybase"],
+  "license": "MIT"
+}
