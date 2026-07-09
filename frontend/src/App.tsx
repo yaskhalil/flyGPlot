@@ -14,6 +14,7 @@ import SpecimenIndexWorkspace from './components/SpecimenIndexWorkspace/Specimen
 import LedgerChartsWorkspace from './components/LedgerChartsWorkspace/LedgerChartsWorkspace';
 import CoexpWorkbenchWorkspace from './components/CoexpWorkbenchWorkspace/CoexpWorkbenchWorkspace';
 import EnrichmentLab from './components/EnrichmentLab/EnrichmentLab';
+import NetworkView from './components/NetworkView/NetworkView';
 
 const getTabDetails = (tab: string) => {
   switch (tab) {
@@ -39,6 +40,12 @@ const getTabDetails = (tab: string) => {
       return {
         title: 'Functional Enrichment Lab',
         description: 'GO term and pathway enrichment analysis for active gene cohorts.',
+        icon: <Compass size={16} />
+      };
+    case 'NetworkView':
+      return {
+        title: 'PPI Network View',
+        description: 'STRING-DB protein-protein interaction network visualization.',
         icon: <Compass size={16} />
       };
     default:
@@ -143,6 +150,10 @@ export default function App() {
                 <button className={`sidebar-nav-btn ${activeTab === 'EnrichmentLab' ? 'active' : ''}`} onClick={() => setActiveTab('EnrichmentLab')}>
                   <Compass size={14} />
                   <span>04_ENRICHMENT_LAB</span>
+                </button>
+                <button className={`sidebar-nav-btn ${activeTab === 'NetworkView' ? 'active' : ''}`} onClick={() => setActiveTab('NetworkView')}>
+                  <Compass size={14} />
+                  <span>05_NETWORK_VIEW</span>
                 </button>
               </nav>
             </div>
@@ -297,6 +308,7 @@ export default function App() {
           {activeTab === 'LedgerCharts' && <LedgerChartsWorkspace />}
           {activeTab === 'CoexpWorkbench' && <CoexpWorkbenchWorkspace />}
           {activeTab === 'EnrichmentLab' && <EnrichmentLab />}
+          {activeTab === 'NetworkView' && <NetworkView />}
         </section>
       </main>
     </div>

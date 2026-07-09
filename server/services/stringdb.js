@@ -57,7 +57,7 @@ export async function getInteractions(genes, { minScore = 400, limit = 50 } = {}
     limit: String(limit),
   };
 
-  const data = await stringRequest('interactionPartners', params);
+  const data = await stringRequest('interaction_partners', params);
 
   if (!Array.isArray(data) || data.length === 0) {
     return { nodes: [], edges: [], metrics: { nodeCount: 0, edgeCount: 0 } };
