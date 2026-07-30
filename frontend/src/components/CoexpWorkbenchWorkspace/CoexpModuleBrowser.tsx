@@ -60,8 +60,7 @@ function hierarchicalCluster(genes: string[], distMat: number[][]): { order: num
     id: i, genes: [g], size: 1, active: true,
   }));
 
-  // Inter-cluster distance matrix
-  const clusterDist: number[][] = distMat.map(row => [...row]);
+  // Inter-cluster distance is computed on the fly from distMat
   let nextId = n;
 
   // Merge log for dendrogram
@@ -114,28 +113,7 @@ function hierarchicalCluster(genes: string[], distMat: number[][]): { order: num
     clusters.push(newCluster);
   }
 
-  // Build ordering: last merge defines the root order
-  // Traverse merge tree in order to get leaf order
-  const getLeaves = (nodeId: number): number[] => {
-    // Find which cluster has this id
-    const c = clusters.find(c => c.id === nodeId);
-    if (!c) return [];
-    // Find if this cluster was formed by a merge
-    const merge = merges.find(m => {
-      const parent = clusters.find(c =>
-        c.genes.includes(clusters[mergeI]?.genes[0] || '') &&
-        c.genes.includes(clusters[mergeJ]?.genes[0] || '') &&
-        c.genes.length === (clusters[mergeI]?.genes.length || 0) + (clusters[mergeJ]?.genes.length || 0)
-      );
-      return false;
-    });
-
-    // Simple: just return genes in order based on merge tree traversal
-    return [];
-  };
-
-  // Simpler ordering approach: use the merge order to reorder genes
-  // Walk the merge tree from root, alternating left/right branches
+  // Order genes by cluster proximity (merge order)
   const finalCluster = clusters.find(c => c.active);
   if (!finalCluster) return { order: [...Array(n).keys()], tree: {} };
 
@@ -147,7 +125,7 @@ function hierarchicalCluster(genes: string[], distMat: number[][]): { order: num
 
 // ── Module assignment by cutting dendrogram ────────────────────────────
 
-function assignModules(genes: string[], order: number[], distMat: number[][], numModules: number): Map<string, number> {
+function assignModules(genes: string[], order: number[], numModules: number): Map<string, number> {
   const moduleMap = new Map<string, number>();
   
   if (genes.length === 0) return moduleMap;
@@ -180,7 +158,6 @@ const MODULE_COLORS = [
 export function CoexpModuleBrowser() {
   const { selectedGenes, geneCache, dashMetric, setDashMetric } = useAppStore();
   const [numModules, setNumModules] = useState(4);
-  const [modMinScore, setModMinScore] = useState(0.2);
 
   const getScore = (a: string, b: string): number => {
     const dataA = geneCache[a];
@@ -200,7 +177,7 @@ export function CoexpModuleBrowser() {
 
     const dist = buildDistanceMatrix(loaded, getScore);
     const { order } = hierarchicalCluster(loaded, dist);
-    const mods = assignModules(loaded, order, dist, numModules);
+    const mods = assignModules(loaded, order, numModules);
 
     return {
       orderedGenes: order.map(i => loaded[i]),
@@ -225,8 +202,6 @@ export function CoexpModuleBrowser() {
     }
     return z;
   }, [orderedGenes, distMat, loadedGenes]);
-
-  const genes = useMemo(() => selectedGenes.filter(g => geneCache[g]?.coexpression?.[dashMetric as 'pearson' | 'spearman' | 'jaccard']), [selectedGenes, geneCache, dashMetric]);
 
   // Compute module statistics
   const moduleStats = useMemo(() => {

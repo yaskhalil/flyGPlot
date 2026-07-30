@@ -1,7 +1,7 @@
 // Cell-type TF Expression Matrix — heatmap of gene expression across cell types
 // Uses cached gene data to build a stage-filterable expression matrix.
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { Compass, Loader, Download } from 'lucide-react';
 import Plotly from 'plotly.js-dist-min';

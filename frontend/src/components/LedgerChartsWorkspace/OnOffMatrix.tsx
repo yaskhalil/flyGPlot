@@ -9,7 +9,7 @@ import { downloadCSV } from '../../utils/csv';
 const STAGES = ['P15', 'P30', 'P40', 'P50', 'P70', 'Adult'];
 
 export function OnOffMatrix() {
-  const { selectedGenes, geneCache, cellsList, stagesList, fetchGeneData } = useAppStore();
+  const { selectedGenes, geneCache, stagesList, fetchGeneData } = useAppStore();
   const stages = stagesList.length > 0 ? stagesList : STAGES;
 
   const [probThreshold, setProbThreshold] = useState(0.5);

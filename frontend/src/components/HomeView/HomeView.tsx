@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
-import { Dna, BarChart2, Compass, Network, Book, Loader } from 'lucide-react';
+import { Dna, BarChart2, Compass, Network, Book } from 'lucide-react';
 
 interface DatasetProfile {
   geneCount: number;
