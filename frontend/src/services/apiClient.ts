@@ -1,7 +1,8 @@
 // API client for Fly TF Expression Backend
-// Handles enrichment, network, and gene queries to http://localhost:4000
+// Handles enrichment, network, and gene queries to backend API
+// In dev: http://localhost:4000/api  In prod (Vercel): /api (same origin)
 
-const API_BASE = 'http://localhost:4000/api';
+const API_BASE = import.meta.env.DEV ? 'http://localhost:4000/api' : '/api';
 
 export class ApiClient {
   // ── Gene Services ──────────────────────────────────────────────────
