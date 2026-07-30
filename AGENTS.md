@@ -3,10 +3,13 @@
 ## Build / Test / Lint
 
 ```bash
-cd frontend && npx tsc --noEmit         # TypeScript check
-cd frontend && npm run build             # Full production build
-cd server && node --check <file>.js     # Syntax check individual files
+npm run build               # Full production build (runs tsc -b + vite)
+npm run prepush             # Run before push — same as build, catches TS errors
+cd frontend && npx tsc --noEmit  # TypeScript check (fast, no emit)
+cd server && node --check <file>.js  # Backend syntax check
 ```
+
+⚠️ **Always run `npm run build` before `git push`** — `tsc --noEmit` passes on unused variables but `tsc -b` (build mode) does not. A pre-push hook is installed at `.git/hooks/pre-push` that blocks pushes with build failures.
 
 ## Code Style
 
