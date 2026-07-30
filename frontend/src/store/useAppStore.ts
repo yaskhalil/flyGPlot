@@ -97,7 +97,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   })(),
 
-  activeTab: 'SpecimenIndex',
+  activeTab: 'Home',
   dashRefGene: 'achi',
   dashMetric: 'pearson',
   selectedPartnerGene: null,

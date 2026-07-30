@@ -5,6 +5,7 @@ import { useState, useCallback } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { apiClient } from '../../services/apiClient';
 import { Compass, Loader, AlertTriangle, Download, ChevronDown, ChevronRight } from 'lucide-react';
+import { WorkspaceLayout } from '../shared/WorkspaceLayout';
 
 interface EnrichmentRow {
   rank: number;
@@ -29,13 +30,29 @@ const DATABASES = [
   'Reactome_2022',
 ];
 
+const PAGE_SIZE = 20;
+
 export function EnrichmentLab() {
   const { selectedGenes, addGenesToSelection } = useAppStore();
   const [selectedDb, setSelectedDb] = useState(DATABASES[0]);
   const [results, setResults] = useState<EnrichmentResults | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [expandedDb, setExpandedDb] = useState<string | null>(null);
+  const [expandedDbs, setExpandedDbs] = useState<string[]>([]);
+  const [resultPages, setResultPages] = useState<Record<string, number>>({});
+
+  const toggleDb = (db: string) => {
+    setExpandedDbs(prev =>
+      prev.includes(db) ? prev.filter(d => d !== db) : [...prev, db]
+    );
+  };
+
+  const showMore = (db: string) => {
+    setResultPages(prev => ({
+      ...prev,
+      [db]: (prev[db] || 1) + 1,
+    }));
+  };
 
   const handleRun = useCallback(async () => {
     if (selectedGenes.length === 0) {
@@ -45,6 +62,8 @@ export function EnrichmentLab() {
     setLoading(true);
     setError(null);
     setResults(null);
+    setExpandedDbs([]);
+    setResultPages({});
 
     try {
       const data = await apiClient.runEnrichment(selectedGenes, DATABASES);
@@ -53,17 +72,15 @@ export function EnrichmentLab() {
         return;
       }
       setResults(data.results);
-      // Auto-expand first database with results
-      const first = Object.entries(data.results || {}).find(
-        ([, v]) => Array.isArray(v) && v.length > 0
-      );
-      if (first) setExpandedDb(first[0]);
+      // Auto-expand the selected DB on first run
+      setExpandedDbs([selectedDb]);
+      setResultPages({ [selectedDb]: 1 });
     } catch (err: any) {
       setError(err.message || 'Failed to run enrichment');
     } finally {
       setLoading(false);
     }
-  }, [selectedGenes]);
+  }, [selectedGenes, selectedDb]);
 
   const formatPValue = (p: number): string => {
     if (p < 0.0001) return p.toExponential(1);
@@ -95,29 +112,50 @@ export function EnrichmentLab() {
     URL.revokeObjectURL(url);
   };
 
+  // Style constants for the results table
+  const tableStyle: React.CSSProperties = {
+    width: '100%',
+    borderCollapse: 'collapse',
+    fontSize: '0.72rem',
+    minWidth: '600px',
+  };
+
+  const thStyle: React.CSSProperties = {
+    padding: '0.5rem 0.65rem',
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.68rem',
+    textTransform: 'uppercase',
+    letterSpacing: '0.04em',
+    fontWeight: 700,
+    color: 'var(--text-primary)',
+    backgroundColor: 'var(--bg-tertiary)',
+    borderBottom: '2px solid var(--text-primary)',
+    textAlign: 'left',
+  };
+
+  const chipStyle: React.CSSProperties = {
+    fontSize: '0.6rem',
+    padding: '0.1rem 0.3rem',
+    cursor: 'pointer',
+    fontFamily: 'var(--font-mono)',
+    backgroundColor: 'var(--bg-tertiary)',
+    border: '1px solid var(--border-color)',
+    borderRadius: '3px',
+    color: 'var(--text-secondary)',
+    display: 'inline-block',
+  };
+
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '1.5rem', alignItems: 'start', width: '100%' }}>
-      {/* Left: Controls */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', minWidth: 0 }}>
-        <div className="card" style={{ margin: 0, padding: '1.25rem' }}>
-          <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>
-            <Compass size={14} style={{ color: 'var(--text-primary)' }} /> ENRICHMENT_CONSOLE
-          </h3>
+    <WorkspaceLayout
+      title="ENRICHMENT_CONSOLE"
+      icon={<Compass size={14} />}
+      controls={
+        <>
 
           <div className="form-group" style={{ marginBottom: '1rem' }}>
-            <label className="form-label">Loaded Cohort</label>
-            <div style={{
-              background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)',
-              borderRadius: '3px', padding: '0.5rem', fontFamily: 'var(--font-mono)', fontSize: '0.72rem',
-              maxHeight: '120px', overflowY: 'auto',
-            }}>
-              {selectedGenes.length > 0
-                ? selectedGenes.map(g => <span key={g} style={{ marginRight: '0.3rem' }}>{g}</span>)
-                : <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Bag empty</span>
-              }
-            </div>
-            <div style={{ marginTop: '0.3rem', fontSize: '0.65rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-              {selectedGenes.length} genes loaded
+            <label className="form-label">Active Cohort</label>
+            <div style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)', padding: '0.3rem 0' }}>
+              {selectedGenes.length} genes in specimen bag
             </div>
           </div>
 
@@ -151,10 +189,10 @@ export function EnrichmentLab() {
               <div style={{ fontSize: '0.75rem' }}>{error}</div>
             </div>
           )}
-        </div>
-
-        {/* Active database summary */}
-        {results && (
+        </>
+      }
+      extraControls={
+        results && (
           <div className="card" style={{ margin: 0, padding: '1.25rem' }}>
             <h4 style={{ marginBottom: '0.75rem', fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>
               DATABASE_SUMMARY
@@ -162,21 +200,25 @@ export function EnrichmentLab() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', fontSize: '0.72rem' }}>
               {Object.entries(results).map(([db, rows]) => {
                 const count = Array.isArray(rows) ? rows.length : 0;
+                const isExpanded = expandedDbs.includes(db);
                 return (
                   <div
                     key={db}
                     style={{
                       display: 'flex', justifyContent: 'space-between',
                       padding: '0.3rem 0.4rem',
-                      background: db === expandedDb ? 'var(--bg-card)' : 'transparent',
+                      background: db === selectedDb ? 'var(--secondary-bg)' : isExpanded ? 'var(--bg-card)' : 'transparent',
                       borderRadius: '3px', cursor: 'pointer',
+                      borderLeft: db === selectedDb ? '3px solid var(--secondary)' : '3px solid transparent',
                     }}
-                    onClick={() => setExpandedDb(db === expandedDb ? null : db)}
+                    onClick={() => toggleDb(db)}
                   >
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem' }}>{db}</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: db === selectedDb ? 700 : 400 }}>
+                      {db}
+                    </span>
                     <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'var(--text-muted)' }}>
-                      {count > 0 ? `${count} terms` : '—'}
-                      {db === expandedDb ? <ChevronDown size={10} style={{ marginLeft: '0.3rem' }} /> : <ChevronRight size={10} style={{ marginLeft: '0.3rem' }} />}
+                      {count > 0 ? `${count} terms` : Array.isArray(rows) ? '—' : 'error'}
+                      {isExpanded ? <ChevronDown size={10} style={{ marginLeft: '0.3rem' }} /> : <ChevronRight size={10} style={{ marginLeft: '0.3rem' }} />}
                     </span>
                   </div>
                 );
@@ -192,11 +234,9 @@ export function EnrichmentLab() {
               </button>
             )}
           </div>
-        )}
-      </div>
-
-      {/* Right: Results */}
-      <div style={{ minWidth: 0 }}>
+        )
+      }
+    >
         {loading && (
           <div className="card" style={{ padding: '2rem', textAlign: 'center' }}>
             <Loader className="animate-spin" size={24} color="var(--primary)" />
@@ -218,7 +258,11 @@ export function EnrichmentLab() {
 
         {results && Object.entries(results).map(([db, rows]) => {
           if (!Array.isArray(rows) || rows.length === 0) return null;
-          if (db !== expandedDb) return null;
+          if (!expandedDbs.includes(db)) return null;
+
+          const page = resultPages[db] || 1;
+          const visibleRows = rows.slice(0, page * PAGE_SIZE);
+          const hasMore = rows.length > visibleRows.length;
 
           return (
             <div key={db} className="card" style={{ padding: '1rem 1rem 1rem 1.5rem' }}>
@@ -229,40 +273,39 @@ export function EnrichmentLab() {
                 </span>
               </h3>
               <div style={{ overflowX: 'auto' }}>
-                <table className="mock-table" style={{ fontSize: '0.72rem', minWidth: '600px' }}>
+                <table style={tableStyle}>
                   <thead>
                     <tr>
-                      <th>#</th>
-                      <th>Term</th>
-                      <th style={{ textAlign: 'right' }}>P-value</th>
-                      <th style={{ textAlign: 'right' }}>Z-score</th>
-                      <th style={{ textAlign: 'right' }}>Combined</th>
-                      <th>Genes</th>
+                      <th style={{ ...thStyle, width: '2rem' }}>#</th>
+                      <th style={thStyle}>Term</th>
+                      <th style={{ ...thStyle, textAlign: 'right', width: '5rem' }}>P-value</th>
+                      <th style={{ ...thStyle, textAlign: 'right', width: '4rem' }}>Z-score</th>
+                      <th style={{ ...thStyle, textAlign: 'right', width: '5rem' }}>Combined</th>
+                      <th style={thStyle}>Genes</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {rows.slice(0, 20).map((r) => (
+                    {visibleRows.map((r) => (
                       <tr key={r.rank} style={r.pValue < 0.001 ? { background: 'rgba(15,118,110,0.03)' } : {}}>
-                        <td style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: '0.65rem' }}>{r.rank}</td>
-                        <td style={{ fontWeight: 600, maxWidth: '280px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.term}>
+                        <td style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: '0.65rem', padding: '0.5rem 0.65rem', borderBottom: '1px solid var(--border-color)' }}>{r.rank}</td>
+                        <td style={{ fontWeight: 600, maxWidth: '280px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', padding: '0.5rem 0.65rem', borderBottom: '1px solid var(--border-color)' }} title={r.term}>
                           {r.term}
                         </td>
-                        <td style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', color: pValueColor(r.pValue), fontWeight: 700 }}>
+                        <td style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', color: pValueColor(r.pValue), fontWeight: 700, padding: '0.5rem 0.65rem', borderBottom: '1px solid var(--border-color)' }}>
                           {formatPValue(r.pValue)}
                         </td>
-                        <td style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: '0.65rem' }}>
+                        <td style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: '0.65rem', padding: '0.5rem 0.65rem', borderBottom: '1px solid var(--border-color)' }}>
                           {r.zScore.toFixed(2)}
                         </td>
-                        <td style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: '0.65rem' }}>
+                        <td style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: '0.65rem', padding: '0.5rem 0.65rem', borderBottom: '1px solid var(--border-color)' }}>
                           {r.combinedScore.toFixed(1)}
                         </td>
-                        <td>
+                        <td style={{ padding: '0.5rem 0.65rem', borderBottom: '1px solid var(--border-color)' }}>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.2rem' }}>
                             {(r.overlappingGenes || []).map(g => (
                               <span
                                 key={g}
-                                className="mock-chip"
-                                style={{ fontSize: '0.6rem', padding: '0.1rem 0.3rem', cursor: 'pointer' }}
+                                style={chipStyle}
                                 onClick={() => addGenesToSelection([g])}
                                 title={`Add ${g} to specimen bag`}
                               >
@@ -276,16 +319,18 @@ export function EnrichmentLab() {
                   </tbody>
                 </table>
               </div>
-              {rows.length > 20 && (
-                <div style={{ marginTop: '0.5rem', fontSize: '0.65rem', color: 'var(--text-muted)', textAlign: 'center', fontFamily: 'var(--font-mono)' }}>
-                  Showing 20 of {rows.length} terms
+              {hasMore && (
+                <div
+                  onClick={() => showMore(db)}
+                  style={{ marginTop: '0.5rem', fontSize: '0.65rem', color: 'var(--secondary)', textAlign: 'center', fontFamily: 'var(--font-mono)', cursor: 'pointer', fontWeight: 700, padding: '0.35rem', border: '1px solid var(--secondary-border)', borderRadius: '3px' }}
+                >
+                  Show {Math.min(PAGE_SIZE, rows.length - visibleRows.length)} more ({rows.length - visibleRows.length} remaining)
                 </div>
               )}
             </div>
           );
         })}
-      </div>
-    </div>
+    </WorkspaceLayout>
   );
 }
 

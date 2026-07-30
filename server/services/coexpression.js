@@ -23,7 +23,10 @@ function loadGeneList() {
  * Returns null if not found.
  */
 function loadGeneData(gene) {
-  const filePath = path.resolve(GENES_DIR, `${gene}.json`);
+  // Sanitize: prevent path traversal
+  const safeGene = gene.replace(/[^a-zA-Z0-9_-]/g, '');
+  if (!safeGene || safeGene !== gene.replace(/\.\./g, '')) return null;
+  const filePath = path.resolve(GENES_DIR, `${safeGene}.json`);
   if (!existsSync(filePath)) return null;
   try {
     return JSON.parse(readFileSync(filePath, 'utf8'));

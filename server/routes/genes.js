@@ -3,7 +3,7 @@
 // All results cached in SQLite.
 
 import { Router } from 'express';
-import { resolveGene as fbResolve, getGoTerms, getAlleles, getOrthologs } from '../services/flybase.js';
+import { resolveGene as fbResolve, getGoTerms, getAlleles, getOrthologs, getReagents } from '../services/flybase.js';
 import { lookupGene, resolveSynonym as ensemblResolve, getOrthologs as ensOrthologs } from '../services/ensembl.js';
 import { getGeneCache, setGeneCache } from '../cache/db.js';
 
@@ -205,6 +205,58 @@ router.post('/batch', async (req, res) => {
   }
 
   res.json({ total: genes.length, resolved, unresolved });
+});
+
+/**
+ * GET /api/genes/reagents?gene=achi
+ * Get available MiMIC/CRIMIC/split-GAL4 reagent info for a gene.
+ * Provides FlyBase reagent page links for ordering.
+ */
+router.get('/reagents', async (req, res) => {
+  const { gene } = req.query;
+  if (!gene || typeof gene !== 'string' || !gene.trim()) {
+    return res.status(400).json({ error: 'gene query parameter required' });
+  }
+  const sym = gene.trim();
+
+  // Resolve to FBgn first
+  let fbgn = null;
+  let symbol = sym;
+  try {
+    const fb = await fbResolve(sym);
+    if (fb && fb.fbgn) {
+      fbgn = fb.fbgn;
+      symbol = fb.symbol || sym;
+    }
+  } catch {}
+
+  if (!fbgn) {
+    try {
+      const ens = await lookupGene(sym);
+      if (ens && ens.geneId) {
+        fbgn = ens.geneId;
+        symbol = ens.symbol || sym;
+      }
+    } catch {}
+  }
+
+  if (!fbgn) {
+    return res.status(404).json({ error: `Gene '${sym}' not found` });
+  }
+
+  try {
+    const reagents = await getReagents(fbgn);
+    res.json({ gene: symbol, fbgn, ...reagents });
+  } catch (err) {
+    console.error(`[Reagents] Error for '${sym}':`, err.message);
+    res.status(502).json({
+      error: 'Failed to fetch reagent data',
+      gene: symbol,
+      fbgn,
+      flybaseUrl: `https://flybase.org/reports/${fbgn}`,
+      reagentsUrl: `https://flybase.org/reports/${fbgn}#reagents`,
+    });
+  }
 });
 
 export default router;

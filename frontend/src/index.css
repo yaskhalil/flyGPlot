@@ -169,12 +169,12 @@ code {
 }
 
 .sidebar-section {
-  margin-bottom: 1.25rem;
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  padding: 0.75rem;
-  box-shadow: var(--shadow-flat);
+  margin-bottom: 0.5rem;
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .sidebar-section-title {
@@ -263,14 +263,7 @@ code {
 }
 
 .main-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background-image: radial-gradient(circle, var(--border-color) 40%, transparent 45%);
-  background-size: 20px 4px;
+  content: none;
 }
 
 .view-meta {
@@ -317,10 +310,58 @@ code {
 .status-dot {
   width: 6px;
   height: 6px;
-  background-color: var(--success);
+  background-color: var(--text-muted);
   border-radius: 50%;
   display: inline-block;
+}
+
+.status-dot.has-genes {
+  background-color: var(--success);
   box-shadow: 0 0 4px var(--success);
+}
+
+/* Header cohort badge */
+.header-cohort {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cohort-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0.25rem 0.55rem;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: default;
+  position: relative;
+}
+
+.cohort-badge:not(.empty) {
+  cursor: pointer;
+}
+
+.cohort-count {
+  font-family: var(--font-mono);
+}
+
+.cohort-chevron {
+  margin-left: 0.3rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+.cohort-clear-btn {
+  padding: 0.2rem 0.4rem !important;
+  font-size: 0.6rem !important;
+  box-shadow: none !important;
+  border: 1px solid var(--border-color) !important;
 }
 
 /* Workspace content area */
@@ -338,17 +379,14 @@ code {
   position: relative;
   background-color: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-left: 4px solid var(--paper-margin-color); /* Red margin of ruled sheet */
   border-radius: 4px;
-  padding: 1.5rem 1.5rem 1.5rem 2.25rem;
-  box-shadow: var(--shadow-page);
+  padding: 1.25rem;
   margin-bottom: 1.5rem;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .card:hover {
   border-color: var(--border-hover);
-  box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.08);
 }
 
 /* Millimeter Graph/Plotter Screen (Replaces dark CRT window) */
@@ -447,21 +485,23 @@ code {
 /* Ruled switch toggles */
 .toggle-group {
   display: flex;
+  flex-wrap: wrap;
   border: 1px solid var(--border-color);
   border-radius: 4px;
-  overflow: hidden;
+  overflow: visible;
   margin-bottom: 1.25rem;
   background-color: var(--bg-tertiary);
 }
 
 .toggle-group-btn {
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 80px;
   background: none;
   border: none;
   color: var(--text-secondary);
-  padding: 0.4rem 0.65rem;
+  padding: 0.4rem 0.4rem;
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.1s;
@@ -913,4 +953,145 @@ code {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
+}
+
+/* ── Workspace Layout (shared component) ──────────────────────────── */
+
+.workspace-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 1.5rem;
+  width: 100%;
+  align-items: stretch;
+  min-height: 0;
+}
+
+.workspace-layout-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+.workspace-layout-right {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Control card for left panel (e.g. PLOTTER_CALIBRATION) */
+.control-card {
+  margin: 0;
+  padding: 1.25rem;
+}
+
+.control-card-header {
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+/* Empty / loading / error state cards */
+.empty-state {
+  padding: 2rem;
+  text-align: center;
+}
+
+.empty-state-icon {
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.empty-state-text {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/* ── Sidebar Collapse ─────────────────────────────────────────────── */
+
+.sidebar-toggle {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-left: none;
+  border-right: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
+  width: 16px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 5;
+  position: relative;
+}
+.sidebar-toggle:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+  width: 20px;
+}
+
+.sidebar-title {
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid var(--text-primary);
+}
+
+.sidebar.collapsed {
+  width: 0;
+  min-width: 0;
+  padding: 1rem 0;
+  overflow: hidden;
+  border-right: none;
+}
+
+.sidebar {
+  transition: width 0.2s ease, padding 0.2s ease, min-width 0.2s ease;
+}
+
+/* Sidebar nav — no wrapping section */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+/* ── Responsive ───────────────────────────────────────────────────── */
+
+@media (max-width: 1100px) {
+  .workspace-layout {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    width: 240px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100vw;
+    position: fixed;
+    z-index: 50;
+    top: 0;
+    left: 0;
+    height: 100vh;
+  }
+  .sidebar.collapsed {
+    width: 55px;
+    min-width: 55px;
+  }
+  .main-header {
+    padding: 0.75rem 1rem;
+  }
+  .tab-content {
+    padding: 1rem;
+  }
 }

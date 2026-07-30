@@ -31,7 +31,10 @@ export function GeneDetailsView({ isEmbedded = false }: GeneDetailsViewProps) {
     goTerms: true,
     alleles: false,
     orthologs: false,
+    reagents: true,
   });
+  const [reagents, setReagents] = useState<any | null>(null);
+  const [reagentsLoading, setReagentsLoading] = useState(false);
 
   useEffect(() => {
     if (allGenesList.length > 0 && !lookupGene) {
@@ -44,6 +47,7 @@ export function GeneDetailsView({ isEmbedded = false }: GeneDetailsViewProps) {
       setLoading(true);
       setError(null);
       setMetadata(null);
+      setReagents(null);
       apiClient.getGeneMetadata(lookupGene)
         .then(data => {
           if (data) {
@@ -57,6 +61,12 @@ export function GeneDetailsView({ isEmbedded = false }: GeneDetailsViewProps) {
           setError(err.message || 'Failed to fetch metadata');
           setLoading(false);
         });
+      
+      // Fetch reagent info
+      setReagentsLoading(true);
+      apiClient.getReagents(lookupGene)
+        .then(r => { setReagents(r); setReagentsLoading(false); })
+        .catch(() => setReagentsLoading(false));
     }
   }, [lookupGene]);
 
@@ -269,6 +279,89 @@ export function GeneDetailsView({ isEmbedded = false }: GeneDetailsViewProps) {
                     )}
                   </div>
                 )}
+
+                {/* ─── Reagents ─── */}
+                <div style={{
+                  border: '1px solid var(--border-color)', borderRadius: '4px',
+                  background: 'var(--bg-card)', overflow: 'hidden',
+                }}>
+                  <div
+                    style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      padding: '0.6rem 0.75rem', background: 'var(--bg-tertiary)',
+                      borderBottom: '1px solid var(--border-color)', cursor: 'pointer',
+                      fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 700,
+                    }}
+                    onClick={() => toggleSection('reagents')}
+                  >
+                    <span>AVAILABLE_REAGENTS
+                      {reagentsLoading && <Loader className="animate-spin" size={10} style={{ marginLeft: '0.4rem' }} />}
+                    </span>
+                    {expandedSections.reagents ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                  </div>
+                  {expandedSections.reagents && (
+                    <div style={{ padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      {reagentsLoading ? (
+                        <div style={{ textAlign: 'center', padding: '1rem' }}>
+                          <Loader className="animate-spin" size={20} color="var(--text-muted)" />
+                        </div>
+                      ) : reagents ? (
+                        <>
+                          {/* Direct links to FlyBase reagent pages */}
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                            <a href={reagents.reagentsUrl} target="_blank" rel="noreferrer"
+                              className="btn btn-primary"
+                              style={{ textDecoration: 'none', fontSize: '0.72rem', padding: '0.35rem 0.65rem' }}>
+                              Reagents on FlyBase <ExternalLink size={12} />
+                            </a>
+                            <a href={reagents.insertionsUrl} target="_blank" rel="noreferrer"
+                              className="btn btn-secondary"
+                              style={{ textDecoration: 'none', fontSize: '0.72rem', padding: '0.35rem 0.65rem', boxShadow: 'none' }}>
+                              Insertion Lines <ExternalLink size={12} />
+                            </a>
+                            <a href={reagents.flybaseUrl} target="_blank" rel="noreferrer"
+                              className="btn btn-secondary"
+                              style={{ textDecoration: 'none', fontSize: '0.72rem', padding: '0.35rem 0.65rem', boxShadow: 'none' }}>
+                              Full Gene Report <ExternalLink size={12} />
+                            </a>
+                          </div>
+
+                          {/* Line type reference guide */}
+                          <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
+                            <div style={{ fontWeight: 700, marginBottom: '0.35rem', fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--text-primary)' }}>
+                              LINE_TYPE_REFERENCE
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                              {(reagents.lineTypes || []).map((lt: any, i: number) => (
+                                <div key={i} style={{ display: 'flex', gap: '0.5rem', alignItems: 'baseline' }}>
+                                  <span style={{
+                                    fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--text-primary)',
+                                    background: 'var(--bg-tertiary)', padding: '0.1rem 0.35rem', borderRadius: '2px',
+                                    fontSize: '0.65rem', whiteSpace: 'nowrap', border: '1px solid var(--border-color)',
+                                  }}>
+                                    {lt.type}
+                                  </span>
+                                  <span style={{ color: 'var(--text-muted)', fontSize: '0.68rem' }}>{lt.description}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Allele count */}
+                          {reagents.alleles && reagents.alleles.length > 0 && (
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
+                              {reagents.alleles.length} allele records found via FlyBase
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                          Reagent info unavailable. Use the FlyBase links above.
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
 
                 {/* ─── IGV Genome Browser ─── */}
                 {metadata?.chromosome && (

@@ -5,7 +5,7 @@ import GeneDetailsView from './GeneDetailsView';
 
 export function SpecimenIndexWorkspace() {
   return (
-    <div className="specimen-index-workspace" style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr 1fr', gap: '1.5rem', alignItems: 'start', width: '100%' }}>
+    <div className="specimen-index-workspace" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', alignItems: 'start', width: '100%' }}>
       {/* Column 1: Info & Diagnostics */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', minWidth: 0 }}>
         <DataConfigView isEmbedded={true} />

@@ -4,81 +4,56 @@ import {
   Dna, 
   BarChart2, 
   Compass, 
-  ChevronRight, 
-  ChevronDown, 
+  Book,
+  ChevronRight,
+  ChevronLeft,
   Trash2, 
   AlertTriangle, 
-  Loader 
+  Loader,
+  Network,
+  ChevronDown,
 } from 'lucide-react';
+import HomeView from './components/HomeView/HomeView';
 import SpecimenIndexWorkspace from './components/SpecimenIndexWorkspace/SpecimenIndexWorkspace';
 import LedgerChartsWorkspace from './components/LedgerChartsWorkspace/LedgerChartsWorkspace';
 import CoexpWorkbenchWorkspace from './components/CoexpWorkbenchWorkspace/CoexpWorkbenchWorkspace';
 import EnrichmentLab from './components/EnrichmentLab/EnrichmentLab';
 import NetworkView from './components/NetworkView/NetworkView';
 
-const getTabDetails = (tab: string) => {
-  switch (tab) {
-    case 'SpecimenIndex':
-      return {
-        title: 'Notebook Specimen Index',
-        description: 'Dataset diagnostics, mathematical definitions, and gene specimen selection.',
-        icon: <Dna size={16} />
-      };
-    case 'LedgerCharts':
-      return {
-        title: 'Ledger Plotter Workbench',
-        description: 'Millimeter graph paper plotter for expression profiles and developmental trajectories.',
-        icon: <BarChart2 size={16} />
-      };
-    case 'CoexpWorkbench':
-      return {
-        title: 'Co-expression Laboratory',
-        description: 'Transcription factor correlation matrices, scatter plots, and linear regression fits.',
-        icon: <Compass size={16} />
-      };
-    case 'EnrichmentLab':
-      return {
-        title: 'Functional Enrichment Lab',
-        description: 'GO term and pathway enrichment analysis for active gene cohorts.',
-        icon: <Compass size={16} />
-      };
-    case 'NetworkView':
-      return {
-        title: 'PPI Network View',
-        description: 'STRING-DB protein-protein interaction network visualization.',
-        icon: <Compass size={16} />
-      };
-    default:
-      return {
-        title: 'Fly TF Expression Console',
-        description: 'Scientific workbench for Drosophila transcriptomics.',
-        icon: <Compass size={16} />
-      };
-  }
-};
+interface TabDef {
+  id: string;
+  label: string;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}
+
+const TABS: TabDef[] = [
+  { id: 'Home', label: 'HOME', icon: <Book size={14} />, title: 'FlyGPlot Console', description: 'Overview, workflow guide, and data sources.' },
+  { id: 'SpecimenIndex', label: 'GENES', icon: <Dna size={14} />, title: 'Gene Registry', description: 'Search, resolve, and manage your gene cohort.' },
+  { id: 'LedgerCharts', label: 'EXPRESSION', icon: <BarChart2 size={14} />, title: 'Expression Dashboard', description: 'Boxplot profiles, developmental trajectories, and ON/OFF matrices.' },
+  { id: 'CoexpWorkbench', label: 'MODULES', icon: <Compass size={14} />, title: 'Co-expression Modules', description: 'Pairwise scatter plots, aggregate correlation, and hierarchical module clustering.' },
+  { id: 'EnrichmentLab', label: 'ANALYSIS', icon: <Network size={14} />, title: 'Functional Analysis', description: 'GO/pathway enrichment via g:Profiler and Enrichr.' },
+  { id: 'NetworkView', label: 'NETWORK', icon: <Network size={14} />, title: 'PPI Network Browser', description: 'STRING-DB protein interaction graphs with force-directed layout.' },
+];
+
+const TAB_MAP = Object.fromEntries(TABS.map(t => [t.id, t]));
 
 export default function App() {
   const { 
     allGenesList, 
-    stagesList, 
     isIndexLoading, 
     indexError,
     loadIndex,
-    selectedStages,
-    setSelectedStages,
-    minExpression,
-    setMinExpression,
-    excludeLowExpression,
-    setExcludeLowExpression,
     selectedGenes,
     setSelectedGenes,
     activeTab,
     setActiveTab,
-    fetchGeneData
+    fetchGeneData,
   } = useAppStore();
 
-  const [filtersExpanded, setFiltersExpanded] = useState(true);
-  const [selectionExpanded, setSelectionExpanded] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [bagExpanded, setBagExpanded] = useState(false);
 
   // Load index data on mount
   useEffect(() => {
@@ -114,196 +89,102 @@ export default function App() {
     );
   }
 
-  const activeTabDetails = getTabDetails(activeTab);
+  const currentTab = TAB_MAP[activeTab] || TABS[0];
 
   return (
     <div className="app-container">
-      {/* 1. Global Navigation & Sidebar */}
-      <aside className="sidebar">
+      {/* Sidebar — navigation only */}
+      <aside className={`sidebar${sidebarCollapsed ? ' collapsed' : ''}`}>
         <div className="sidebar-title">
           <div className="sidebar-title-text">
             <Compass size={20} style={{ color: 'var(--secondary)' }} />
-            <span>FlyGPlot Ledger</span>
+            <span>FlyGPlot</span>
           </div>
-          <span className="sidebar-subtitle">Lab Notebook & Logs</span>
+          <span className="sidebar-subtitle">Drosophila TF Explorer</span>
         </div>
-        
-        {allGenesList.length > 0 ? (
-          <>
-            <div className="sidebar-section" style={{ backgroundColor: 'transparent', border: 'none', padding: 0, boxShadow: 'none' }}>
-              <div className="sidebar-section-title" style={{ paddingLeft: '0.25rem' }}>
-                <span>Ledger Chapters</span>
-              </div>
-              <nav className="sidebar-nav">
-                <button className={`sidebar-nav-btn ${activeTab === 'SpecimenIndex' ? 'active' : ''}`} onClick={() => setActiveTab('SpecimenIndex')}>
-                  <Dna size={14} />
-                  <span>01_SPECIMEN_INDEX</span>
-                </button>
-                <button className={`sidebar-nav-btn ${activeTab === 'LedgerCharts' ? 'active' : ''}`} onClick={() => setActiveTab('LedgerCharts')}>
-                  <BarChart2 size={14} />
-                  <span>02_LEDGER_CHARTS</span>
-                </button>
-                <button className={`sidebar-nav-btn ${activeTab === 'CoexpWorkbench' ? 'active' : ''}`} onClick={() => setActiveTab('CoexpWorkbench')}>
-                  <Compass size={14} />
-                  <span>03_COEXP_WORKBENCH</span>
-                </button>
-                <button className={`sidebar-nav-btn ${activeTab === 'EnrichmentLab' ? 'active' : ''}`} onClick={() => setActiveTab('EnrichmentLab')}>
-                  <Compass size={14} />
-                  <span>04_ENRICHMENT_LAB</span>
-                </button>
-                <button className={`sidebar-nav-btn ${activeTab === 'NetworkView' ? 'active' : ''}`} onClick={() => setActiveTab('NetworkView')}>
-                  <Compass size={14} />
-                  <span>05_NETWORK_VIEW</span>
-                </button>
-              </nav>
-            </div>
 
-            <div className="divider" style={{ margin: '0.25rem 0 0.75rem 0' }}></div>
-
-            <div className="sidebar-section">
-              <div className="sidebar-section-title" onClick={() => setFiltersExpanded(!filtersExpanded)}>
-                <span>Filter Rules</span>
-                {filtersExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-              </div>
-              
-              {filtersExpanded && (
-                <div className="sidebar-section-content" style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', marginTop: '0.5rem' }}>
-                  <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label" style={{ fontSize: '0.68rem' }}>Stages Array</label>
-                    <div className="stage-badge-container">
-                      {stagesList.map(stage => {
-                        const isSelected = selectedStages.includes(stage);
-                        return (
-                          <span 
-                            key={stage}
-                            className={`stage-badge ${isSelected ? 'selected' : ''}`}
-                            onClick={() => {
-                              if (isSelected) {
-                                setSelectedStages(selectedStages.filter(s => s !== stage));
-                              } else {
-                                setSelectedStages([...selectedStages, stage]);
-                              }
-                            }}
-                          >
-                            {stage}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label" style={{ fontSize: '0.68rem' }}>Min Cutoff ({minExpression.toFixed(2)})</label>
-                    <input 
-                      type="range" 
-                      min="0" 
-                      max="5" 
-                      step="0.05" 
-                      value={minExpression}
-                      onChange={(e) => setMinExpression(parseFloat(e.target.value))}
-                      style={{ width: '100%', accentColor: 'var(--primary)' }}
-                    />
-                  </div>
-
-                  <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-checkbox-label">
-                      <input 
-                        type="checkbox" 
-                        checked={excludeLowExpression}
-                        onChange={(e) => setExcludeLowExpression(e.target.checked)}
-                      />
-                      <span style={{ fontSize: '0.7rem' }}>Filter &lt; 0.10</span>
-                    </label>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="divider" style={{ margin: '0.25rem 0 0.75rem 0' }}></div>
-
-            <div className="sidebar-section" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', marginBottom: 0 }}>
-              <div className="sidebar-section-title" onClick={() => setSelectionExpanded(!selectionExpanded)}>
-                <span>Specimen Bag ({selectedGenes.length})</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                  {selectedGenes.length > 0 && (
-                    <span 
-                      style={{ display: 'inline-flex', cursor: 'pointer', color: 'var(--error)' }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (confirm("Clear active cohort bag?")) {
-                          setSelectedGenes([]);
-                        }
-                      }} 
-                      title="Clear active cohort"
-                    >
-                      <Trash2 size={12} />
-                    </span>
-                  )}
-                  {selectionExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-                </div>
-              </div>
-              
-              {selectionExpanded && (
-                <div style={{ 
-                  flexGrow: 1, 
-                  backgroundColor: 'var(--bg-tertiary)', 
-                  border: '1px solid var(--border-color)', 
-                  borderRadius: '3px', 
-                  padding: '0.6rem', 
-                  overflowY: 'auto',
-                  fontSize: '0.75rem',
-                  color: 'var(--text-primary)',
-                  marginTop: '0.5rem',
-                  maxHeight: '180px',
-                  fontFamily: 'var(--font-mono)'
-                }}>
-                  {selectedGenes.length > 0 ? (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
-                      {selectedGenes.map(gene => (
-                        <span key={gene} className="gene-chip">
-                          {gene}
-                          <span 
-                            className="gene-chip-remove"
-                            onClick={() => setSelectedGenes(selectedGenes.filter(g => g !== gene))}
-                          >
-                            &times;
-                          </span>
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <span style={{ fontStyle: 'italic', color: 'var(--text-muted)' }}>Bag empty. Pinned records will show here.</span>
-                  )}
-                </div>
-              )}
-            </div>
-          </>
-        ) : (
-          <div className="alert alert-warning">
-            <AlertTriangle className="alert-warning-icon" size={14} />
-            <div>No dataset loaded.</div>
-          </div>
-        )}
+        <nav className="sidebar-nav">
+          {TABS.map(tab => (
+            <button
+              key={tab.id}
+              className={`sidebar-nav-btn ${activeTab === tab.id ? 'active' : ''}`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {tab.icon}
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </nav>
       </aside>
 
-      {/* 2. Main Work Panel */}
+      {/* Sidebar toggle */}
+      <button
+        className="sidebar-toggle"
+        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+        title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+      >
+        {sidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+      </button>
+
+      {/* Main Work Panel */}
       <main className="main-panel">
         <header className="main-header">
           <div className="view-meta">
             <span className="view-title">
-              {activeTabDetails.title}
+              {currentTab.icon}
+              {currentTab.title}
             </span>
-            <span className="view-description">{activeTabDetails.description}</span>
+            <span className="view-description">{currentTab.description}</span>
           </div>
-          <div className="status-badge-container">
-            <div className="status-badge">
-              <span className="status-dot"></span>
-              <span style={{ marginLeft: '0.4rem' }}>INDEX_STABLE</span>
+
+          {/* Gene cohort badge */}
+<div className="header-cohort">
+            <div
+              className={`cohort-badge ${selectedGenes.length === 0 ? 'empty' : ''}`}
+              onClick={() => selectedGenes.length > 0 && setBagExpanded(!bagExpanded)}
+              title={selectedGenes.length > 0 ? 'Click to view gene cohort' : undefined}
+            >
+              <span className={`status-dot ${selectedGenes.length > 0 ? 'has-genes' : ''}`} />
+              <span className="cohort-count">
+                {selectedGenes.length} gene{selectedGenes.length !== 1 ? 's' : ''}
+              </span>
+              {selectedGenes.length > 0 && (
+                <span className="cohort-chevron">
+                  {bagExpanded ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
+                </span>
+              )}
             </div>
+
+            {selectedGenes.length > 0 && (
+              <button
+                className="btn btn-secondary cohort-clear-btn"
+                onClick={() => { if (confirm('Clear gene cohort?')) setSelectedGenes([]); }}
+                title="Clear cohort"
+              >
+                <Trash2 size={11} />
+              </button>
+            )}
           </div>
         </header>
 
+        {/* Expandable gene bag row */}
+        {bagExpanded && selectedGenes.length > 0 && (
+          <div style={{
+            padding: '0.5rem 2rem', backgroundColor: 'var(--bg-card)',
+            borderBottom: '1px solid var(--border-color)',
+            display: 'flex', flexWrap: 'wrap', gap: '0.3rem', alignItems: 'center',
+          }}>
+            {selectedGenes.map(gene => (
+              <span key={gene} className="gene-chip">
+                {gene}
+                <span className="gene-chip-remove" onClick={() => setSelectedGenes(selectedGenes.filter(g => g !== gene))}>&times;</span>
+              </span>
+            ))}
+          </div>
+        )}
+
         <section className="tab-content">
+          {activeTab === 'Home' && <HomeView />}
           {activeTab === 'SpecimenIndex' && <SpecimenIndexWorkspace />}
           {activeTab === 'LedgerCharts' && <LedgerChartsWorkspace />}
           {activeTab === 'CoexpWorkbench' && <CoexpWorkbenchWorkspace />}

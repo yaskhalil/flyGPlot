@@ -32,8 +32,8 @@ export class StaticJsonDataClient implements DrosophilaDataClient {
 
   async fetchCellData(cell: string): Promise<CellPayload | null> {
     if (!cell || typeof cell !== 'string') return null;
-    const safeCellName = cell.replace(/\//g, '_').replace(/ /g, '_');
-    const res = await fetch(`/data/cells/${encodeURIComponent(safeCellName)}.json`);
+    const safeCellName = cell.replace(/\//g, '_').replace(/ /g, '_').replace(/#/g, '_hash_');
+    const res = await fetch(`/data/cells/${safeCellName}.json`);
     if (!res.ok) throw new Error(`Failed to load data for cell ${cell}`);
     return res.json();
   }

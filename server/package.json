@@ -10,11 +10,16 @@
     "test": "node --test routes/*.test.js"
   },
   "dependencies": {
-    "better-sqlite3": "^11.8.1",
+    "better-sqlite3": "^12.11.1",
     "cors": "^2.8.6",
     "dotenv": "^16.4.7",
     "express": "^5.1.0"
   },
-  "keywords": ["drosophila", "bioinformatics", "gene-expression", "flybase"],
+  "keywords": [
+    "drosophila",
+    "bioinformatics",
+    "gene-expression",
+    "flybase"
+  ],
   "license": "MIT"
 }

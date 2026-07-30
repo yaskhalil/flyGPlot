@@ -34,6 +34,14 @@ export class ApiClient {
     return res.json();
   }
 
+  // ── Reagents ──────────────────────────────────────────────────────
+
+  async getReagents(gene: string) {
+    const res = await fetch(`${API_BASE}/genes/reagents?gene=${encodeURIComponent(gene)}`);
+    if (!res.ok) return null;
+    return res.json();
+  }
+
   // ── Enrichment ─────────────────────────────────────────────────────
 
   async runEnrichment(genes: string[], databases?: string[]) {

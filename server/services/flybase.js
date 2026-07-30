@@ -3,14 +3,14 @@
 //       to resolve symbol → FBgn, then /gene/{fbgn} for full record.
 
 import config from '../config/env.js';
-import { HTTP_TIMEOUT } from '../config/constants.js';
 
 const BASE = config.flybase.baseUrl;
+const FLYBASE_TIMEOUT = 5000; // FlyBase is slow — fail fast to Ensembl fallback
 
 async function fbFetch(path) {
   const url = `${BASE}${path}`;
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), HTTP_TIMEOUT);
+  const timeout = setTimeout(() => controller.abort(), FLYBASE_TIMEOUT);
   try {
     const res = await fetch(url, {
       signal: controller.signal,
@@ -125,8 +125,41 @@ export async function getAlleles(fbgn) {
 }
 
 /**
- * Fetch orthologs for a gene by FBgn ID.
+ * Fetch reagent/allele information for a gene by FBgn ID.
+ * Falls back to providing FlyBase reagent links when API data is unavailable.
  */
+export async function getReagents(fbgn) {
+  // Try the FlyBase alleles API
+  let alleles = [];
+  try {
+    const data = await fbFetch(`/gene/${encodeURIComponent(fbgn)}/alleles`);
+    if (Array.isArray(data) && data.length > 0) {
+      alleles = data.map(a => ({
+        symbol: a.symbol || a.name || null,
+        type: a.allele_type || a.type || null,
+        phenotype: a.phenotype || null,
+      }));
+    }
+  } catch { /* fall through to providing links */ }
+
+  // Build FlyBase reagent page URLs
+  return {
+    fbgn,
+    alleles,
+    alleleCount: alleles.length,
+    flybaseUrl: `https://flybase.org/reports/${fbgn}`,
+    reagentsUrl: `https://flybase.org/reports/${fbgn}#reagents`,
+    allelesUrl: `https://flybase.org/reports/${fbgn}#alleles`,
+    insertionsUrl: `https://flybase.org/reports/${fbgn}#insertions`,
+    // Known MiMIC/CRIMIC line patterns for reference
+    lineTypes: [
+      { type: 'MiMIC', description: 'Minos-mediated integration cassette — Trojan-GAL4, protein trap, enhancer trap', prefix: 'Mi{' },
+      { type: 'CRIMIC', description: 'CRISPR-mediated integration cassette — similar to MiMIC but CRISPR-based', prefix: 'CRIMIC' },
+      { type: 'split-GAL4', description: 'Intersectional driver made from two hemi-drivers (AD + DBD)', prefix: 'split-GAL4' },
+      { type: 'GAL4', description: 'Classical enhancer trap GAL4 lines', prefix: 'GAL4' },
+    ],
+  };
+}
 export async function getOrthologs(fbgn) {
   const data = await fbFetch(`/gene/${encodeURIComponent(fbgn)}/orthologs`);
   if (!data || !Array.isArray(data)) return [];
