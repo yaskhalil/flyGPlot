@@ -7,12 +7,19 @@ import { apiClient } from '../../services/apiClient';
 import { Compass, Loader, AlertTriangle, Download, ChevronDown, ChevronRight } from 'lucide-react';
 import { WorkspaceLayout } from '../shared/WorkspaceLayout';
 
+// The two backends report different statistics: Enrichr returns its own
+// z-score and combined score, g:Profiler returns a hypergeometric p-value with
+// precision/recall. Both are optional here so neither gets rendered under the
+// other's label.
 interface EnrichmentRow {
   rank: number;
   term: string;
   pValue: number;
-  zScore: number;
-  combinedScore: number;
+  zScore?: number;
+  combinedScore?: number;
+  negLog10P?: number;
+  intersectionSize?: number;
+  termSize?: number;
   overlappingGenes: string[];
   termId?: string;
 }
@@ -36,6 +43,16 @@ export function EnrichmentLab() {
   const { selectedGenes, addGenesToSelection } = useAppStore();
   const [selectedDb, setSelectedDb] = useState(DATABASES[0]);
   const [results, setResults] = useState<EnrichmentResults | null>(null);
+  // The two backends compute different statistics and, on the Enrichr path,
+  // run against human orthologs rather than the submitted fly genes. Which one
+  // answered has to reach the user or the numbers are uninterpretable.
+  const [meta, setMeta] = useState<{
+    enrichmentEngine?: string;
+    genesSubmitted?: number;
+    genesMapped?: number;
+    genesFailed?: string[];
+    orthologFallback?: boolean;
+  } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expandedDbs, setExpandedDbs] = useState<string[]>([]);
@@ -62,6 +79,7 @@ export function EnrichmentLab() {
     setLoading(true);
     setError(null);
     setResults(null);
+    setMeta(null);
     setExpandedDbs([]);
     setResultPages({});
 
@@ -72,6 +90,13 @@ export function EnrichmentLab() {
         return;
       }
       setResults(data.results);
+      setMeta({
+        enrichmentEngine: data.enrichmentEngine,
+        genesSubmitted: data.genesSubmitted,
+        genesMapped: data.genesMapped,
+        genesFailed: data.genesFailed,
+        orthologFallback: data.orthologFallback,
+      });
       // Auto-expand the selected DB on first run
       setExpandedDbs([selectedDb]);
       setResultPages({ [selectedDb]: 1 });
@@ -96,11 +121,23 @@ export function EnrichmentLab() {
 
   const exportCSV = () => {
     if (!results) return;
-    let csv = 'Database,Rank,Term,P-value,Z-score,Combined Score,Overlapping Genes\n';
+    let csv = 'Database,Rank,Term,TermID,P-value,Z-score,Combined Score,Overlap,Term Size,Overlapping Genes\n';
     for (const [db, rows] of Object.entries(results)) {
       if (!Array.isArray(rows)) continue;
       for (const r of rows) {
-        csv += `${db},${r.rank},"${r.term}",${r.pValue},${r.zScore},${r.combinedScore},"${r.overlappingGenes.join('; ')}"\n`;
+        const cells = [
+          db,
+          r.rank,
+          `"${r.term}"`,
+          r.termId ?? '',
+          r.pValue,
+          r.zScore ?? '',
+          r.combinedScore ?? '',
+          r.intersectionSize ?? '',
+          r.termSize ?? '',
+          `"${(r.overlappingGenes || []).join('; ')}"`,
+        ];
+        csv += cells.join(',') + '\n';
       }
     }
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -256,6 +293,31 @@ export function EnrichmentLab() {
           </div>
         )}
 
+        {meta && (
+          <div style={{
+            marginBottom: '0.75rem', fontFamily: 'var(--font-mono)',
+            fontSize: '0.7rem', color: 'var(--text-secondary)',
+          }}>
+            engine: <strong>{meta.enrichmentEngine === 'enrichr' ? 'Enrichr' : 'g:Profiler'}</strong>
+            {meta.enrichmentEngine === 'enrichr'
+              ? ' — z-score and combined score are Enrichr statistics'
+              : ' — hypergeometric p-value; no z-score or combined score'}
+            {typeof meta.genesMapped === 'number' && (
+              <> · {meta.genesMapped}/{meta.genesSubmitted} genes mapped</>
+            )}
+            {meta.orthologFallback && (
+              <div style={{ color: 'var(--warning, #b45309)' }}>
+                Ortholog mapping failed — terms were computed on the fly symbols as submitted.
+              </div>
+            )}
+            {meta.genesFailed && meta.genesFailed.length > 0 && (
+              <div style={{ color: 'var(--warning, #b45309)' }}>
+                not recognised: {meta.genesFailed.join(', ')}
+              </div>
+            )}
+          </div>
+        )}
+
         {results && Object.entries(results).map(([db, rows]) => {
           if (!Array.isArray(rows) || rows.length === 0) return null;
           if (!expandedDbs.includes(db)) return null;
@@ -279,8 +341,8 @@ export function EnrichmentLab() {
                       <th style={{ ...thStyle, width: '2rem' }}>#</th>
                       <th style={thStyle}>Term</th>
                       <th style={{ ...thStyle, textAlign: 'right', width: '5rem' }}>P-value</th>
-                      <th style={{ ...thStyle, textAlign: 'right', width: '4rem' }}>Z-score</th>
-                      <th style={{ ...thStyle, textAlign: 'right', width: '5rem' }}>Combined</th>
+                      <th style={{ ...thStyle, textAlign: 'right', width: '4rem' }} title="Enrichr z-score; blank for g:Profiler, which does not compute one">Z-score</th>
+                      <th style={{ ...thStyle, textAlign: 'right', width: '5rem' }} title="Enrichr combined score, or overlap / term size for g:Profiler">Score / Overlap</th>
                       <th style={thStyle}>Genes</th>
                     </tr>
                   </thead>
@@ -295,10 +357,14 @@ export function EnrichmentLab() {
                           {formatPValue(r.pValue)}
                         </td>
                         <td style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: '0.65rem', padding: '0.5rem 0.65rem', borderBottom: '1px solid var(--border-color)' }}>
-                          {r.zScore.toFixed(2)}
+                          {typeof r.zScore === 'number' ? r.zScore.toFixed(2) : '—'}
                         </td>
                         <td style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: '0.65rem', padding: '0.5rem 0.65rem', borderBottom: '1px solid var(--border-color)' }}>
-                          {r.combinedScore.toFixed(1)}
+                          {typeof r.combinedScore === 'number'
+                            ? r.combinedScore.toFixed(1)
+                            : typeof r.intersectionSize === 'number'
+                              ? `${r.intersectionSize}/${r.termSize ?? '?'}`
+                              : '—'}
                         </td>
                         <td style={{ padding: '0.5rem 0.65rem', borderBottom: '1px solid var(--border-color)' }}>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.2rem' }}>

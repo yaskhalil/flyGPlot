@@ -62,6 +62,10 @@ export async function runGProfiler(genes, databases = ['GO_Biological_Process_20
         sources,
         significance_threshold_method: 'fdr',
         user_threshold: 0.05,
+        // Required for g:Profiler to return per-term `intersections`. Without it
+        // the response carries no gene-level detail and every term comes back
+        // with an empty overlap list.
+        no_evidences: false,
       }),
     });
 
@@ -79,41 +83,56 @@ export async function runGProfiler(genes, databases = ['GO_Biological_Process_20
       grouped[source] = [];
     }
 
-    const mappedGenes = new Set();
+    // g:Profiler reports gene-level overlap positionally: for each result row,
+    // `intersections[i]` holds the evidence codes for the i-th gene in
+    // `meta.genes_metadata.query.<q>.ensgs`. A non-empty entry means that gene is
+    // in the term. We resolve those Ensembl/FBgn IDs back to the caller's symbols
+    // via the `mapping` table so results are reported in the user's own vocabulary.
+    const queryMeta = data?.meta?.genes_metadata?.query || {};
+    const firstQueryKey = Object.keys(queryMeta)[0];
+    const ensgs = firstQueryKey ? queryMeta[firstQueryKey].ensgs || [] : [];
+    const mapping = firstQueryKey ? queryMeta[firstQueryKey].mapping || {} : {};
 
-    // Track which query genes were mapped (g:Profiler returns FBgn IDs in overlapping_genes,
-    // so we match them back to the original query by case-insensitive comparison)
-    const queryLower = new Set(genes.map(g => g.toLowerCase()));
+    // FBgn -> original input symbol
+    const idToSymbol = {};
+    for (const [symbol, ids] of Object.entries(mapping)) {
+      for (const id of ids || []) idToSymbol[id] = symbol;
+    }
+
+    const failed = new Set((data?.meta?.genes_metadata?.failed || []).map(g => g.toLowerCase()));
+    const mappedGenes = new Set(
+      genes.filter(g => !failed.has(g.toLowerCase()) && (mapping[g] || []).length > 0)
+    );
 
     for (const row of rawResults) {
       const source = row.source;
       if (!grouped[source]) continue;
 
-      // Map overlapping FBgn IDs back to original query symbols
-      const mappedOverlap = (row.overlapping_genes || []).filter(Boolean).map(id => {
-        const lower = id.toLowerCase();
-        // Try exact match against query first
-        const exact = genes.find(g => g.toLowerCase() === lower);
-        if (exact) return exact;
-        // Return the ID as-is if no match (g:Profiler uses FBgn IDs)
-        return id;
-      });
-
-      for (const g of mappedOverlap) {
-        mappedGenes.add(g.toLowerCase());
+      const intersections = row.intersections || [];
+      const overlappingGenes = [];
+      for (let i = 0; i < ensgs.length; i++) {
+        const evidence = intersections[i];
+        if (evidence && evidence.length > 0) {
+          overlappingGenes.push(idToSymbol[ensgs[i]] || ensgs[i]);
+        }
       }
 
       grouped[source].push({
         rank: grouped[source].length + 1,
         term: `${row.name} (${row.native})`,
         pValue: row.p_value,
-        zScore: row.p_value ? -Math.log10(row.p_value) : 0,
-        combinedScore: row.intersection_size,
-        overlappingGenes: mappedOverlap,
+        // g:Profiler is a hypergeometric test and reports no z-score or Enrichr
+        // combined score. Exposing -log10(p) under its own name keeps the two
+        // backends from being silently compared on incompatible statistics.
+        negLog10P: row.p_value ? -Math.log10(row.p_value) : 0,
+        overlappingGenes,
         termId: row.native,
         significant: row.significant || false,
         intersectionSize: row.intersection_size || 0,
         termSize: row.term_size || 0,
+        querySize: row.query_size || 0,
+        precision: row.precision ?? null,
+        recall: row.recall ?? null,
       });
     }
 
@@ -126,7 +145,11 @@ export async function runGProfiler(genes, databases = ['GO_Biological_Process_20
     return {
       jobId: `gp_${organism}_${Date.now()}`,
       genesSubmitted: genes.length,
-      genesMapped: Math.min(mappedGenes.size, genes.length),
+      genesMapped: mappedGenes.size,
+      // A symbol g:Profiler cannot map is dropped from the query, shrinking the
+      // set the test actually ran on. Returned so the UI can name it rather
+      // than reporting a p-value over a silently smaller gene list.
+      genesFailed: genes.filter(g => !mappedGenes.has(g)),
       organism,
       databases: sources,
       results: grouped,
