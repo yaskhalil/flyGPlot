@@ -12,6 +12,7 @@ import {
   Loader,
   Network,
   ChevronDown,
+  Target,
 } from 'lucide-react';
 import HomeView from './components/HomeView/HomeView';
 import SpecimenIndexWorkspace from './components/SpecimenIndexWorkspace/SpecimenIndexWorkspace';
@@ -19,6 +20,7 @@ import LedgerChartsWorkspace from './components/LedgerChartsWorkspace/LedgerChar
 import CoexpWorkbenchWorkspace from './components/CoexpWorkbenchWorkspace/CoexpWorkbenchWorkspace';
 import EnrichmentLab from './components/EnrichmentLab/EnrichmentLab';
 import NetworkView from './components/NetworkView/NetworkView';
+import MarkerSelectorWorkspace from './components/MarkerSelector/MarkerSelectorWorkspace';
 
 interface TabDef {
   id: string;
@@ -31,6 +33,7 @@ interface TabDef {
 const TABS: TabDef[] = [
   { id: 'Home', label: 'HOME', icon: <Book size={14} />, title: 'FlyGPlot Console', description: 'Overview, workflow guide, and data sources.' },
   { id: 'SpecimenIndex', label: 'GENES', icon: <Dna size={14} />, title: 'Gene Registry', description: 'Search, resolve, and manage your gene cohort.' },
+  { id: 'MarkerSelector', label: 'MARKERS', icon: <Target size={14} />, title: 'Marker Selector', description: 'Start from a cell type: find genes and split-GAL4 pairs that mark it and nothing else.' },
   { id: 'LedgerCharts', label: 'EXPRESSION', icon: <BarChart2 size={14} />, title: 'Expression Dashboard', description: 'Boxplot profiles, developmental trajectories, and ON/OFF matrices.' },
   { id: 'CoexpWorkbench', label: 'MODULES', icon: <Compass size={14} />, title: 'Co-expression Modules', description: 'Pairwise scatter plots, aggregate correlation, and hierarchical module clustering.' },
   { id: 'EnrichmentLab', label: 'ANALYSIS', icon: <Network size={14} />, title: 'Functional Analysis', description: 'GO/pathway enrichment via g:Profiler and Enrichr.' },
@@ -186,6 +189,7 @@ export default function App() {
         <section className="tab-content">
           {activeTab === 'Home' && <HomeView />}
           {activeTab === 'SpecimenIndex' && <SpecimenIndexWorkspace />}
+          {activeTab === 'MarkerSelector' && <MarkerSelectorWorkspace />}
           {activeTab === 'LedgerCharts' && <LedgerChartsWorkspace />}
           {activeTab === 'CoexpWorkbench' && <CoexpWorkbenchWorkspace />}
           {activeTab === 'EnrichmentLab' && <EnrichmentLab />}
