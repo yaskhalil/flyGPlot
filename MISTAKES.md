@@ -56,6 +56,14 @@ Quantizing to 15 levels instead pushed a posterior of exactly 1.0 to 16, which d
 
 Drosophila genes can start with lowercase (`achi`, `eve`) or uppercase (`Abd-B`, `Ubx`). Using case heuristics to detect organism is unreliable. Since this is a Drosophila tool, always default to `dmelanogaster` in g:Profiler.
 
-## Co-expression Sync Reads Block Event Loop
+## Don't Recompute What the Data Already Carries
 
-`loadGeneData()` uses `readFileSync` for every gene. With 13,000+ genes, this blocks the Node.js event loop. Keep batch sizes small (100) and consider async reads for future optimization.
+The server once held a 402-line Pearson/Spearman/Jaccard engine that read every
+gene file synchronously with `readFileSync` — blocking the event loop across
+13,000+ genes — to produce co-expression scores that were **already precomputed
+in the `coexpression` field of each gene's JSON**. Nothing ever called it; the
+frontend had always read the static field.
+
+The lesson is not "use async reads." It is to check whether the data already
+answers the question before building a service to answer it. The engine was
+deleted rather than optimized.

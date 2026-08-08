@@ -14,7 +14,6 @@ export const CACHE_TTL = {
   geneLookupFallback: 30 * 60 * 1000, // 30 minutes
   enrichment: 7 * 24 * 3600 * 1000,   // 7 days
   ppiNetwork: 7 * 24 * 3600 * 1000,   // 7 days
-  geoMetadata: 30 * 24 * 3600 * 1000, // 30 days
 };
 
 export const ENRICHR_DATABASES = [
