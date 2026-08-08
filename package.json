@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "cd frontend && npm run dev",
     "build": "cd frontend && npm run build",
+    "build:matrix": "node scripts/build-onoff-matrix.mjs",
     "prepush": "npm run build"
   },
   "dependencies": {
