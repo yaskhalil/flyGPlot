@@ -9,6 +9,9 @@ export const DROSOPHILA = {
 
 export const CACHE_TTL = {
   geneLookup: 24 * 3600 * 1000,       // 24 hours
+  // Short, because a fallback result is evidence the primary was down, not a
+  // durable answer — it should not outlive the outage that produced it.
+  geneLookupFallback: 30 * 60 * 1000, // 30 minutes
   enrichment: 7 * 24 * 3600 * 1000,   // 7 days
   ppiNetwork: 7 * 24 * 3600 * 1000,   // 7 days
   geoMetadata: 30 * 24 * 3600 * 1000, // 30 days

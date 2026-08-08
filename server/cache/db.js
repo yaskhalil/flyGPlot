@@ -7,6 +7,7 @@ import { mkdirSync, existsSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import config from '../config/env.js';
+import { CACHE_TTL } from '../config/constants.js';
 import { createHash } from 'crypto';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -41,7 +42,8 @@ db.exec(`
     gene TEXT PRIMARY KEY,
     fbgn TEXT,
     data TEXT NOT NULL,
-    fetched_at INTEGER NOT NULL
+    fetched_at INTEGER NOT NULL,
+    ttl_ms INTEGER NOT NULL DEFAULT 86400000
   );
 
   CREATE TABLE IF NOT EXISTS imported_datasets (
@@ -55,6 +57,14 @@ db.exec(`
     metadata TEXT
   );
 `);
+
+// gene_cache predates its ttl_ms column, and CREATE TABLE IF NOT EXISTS will
+// not add one to a database that already exists. Without this, an established
+// cache keeps serving rows the expiry check cannot see.
+const geneCacheColumns = db.prepare('PRAGMA table_info(gene_cache)').all();
+if (!geneCacheColumns.some(c => c.name === 'ttl_ms')) {
+  db.exec('ALTER TABLE gene_cache ADD COLUMN ttl_ms INTEGER NOT NULL DEFAULT 86400000');
+}
 
 // ── Generic Cache ─────────────────────────────────────────────────────
 
@@ -78,14 +88,25 @@ export function cacheSet(key, data, ttlMs) {
 // ── Gene Cache (lookup by symbol) ────────────────────────────────────
 
 export function getGeneCache(gene) {
-  const row = db.prepare('SELECT data FROM gene_cache WHERE gene = lower(?)').get(gene);
+  const row = db.prepare(
+    'SELECT data FROM gene_cache WHERE gene = lower(?) AND (fetched_at + ttl_ms) > ?'
+  ).get(gene, Date.now());
   return row ? JSON.parse(row.data) : null;
 }
 
-export function setGeneCache(gene, data) {
+/**
+ * Cache a resolved gene. Results that came from a fallback source get a short
+ * TTL: they were produced while the primary was failing, and at the default
+ * 24 hours a single outage would keep serving the degraded answer long after
+ * FlyBase recovered.
+ */
+export function setGeneCache(gene, data, ttlMs) {
+  const ttl = ttlMs ?? (data.source && data.source !== 'flybase'
+    ? CACHE_TTL.geneLookupFallback
+    : CACHE_TTL.geneLookup);
   db.prepare(
-    'INSERT OR REPLACE INTO gene_cache(gene, fbgn, data, fetched_at) VALUES(lower(?), ?, ?, ?)'
-  ).run(gene, data.fbgn || null, JSON.stringify(data), Date.now());
+    'INSERT OR REPLACE INTO gene_cache(gene, fbgn, data, fetched_at, ttl_ms) VALUES(lower(?), ?, ?, ?, ?)'
+  ).run(gene, data.fbgn || null, JSON.stringify(data), Date.now(), ttl);
 }
 
 // ── Dataset Management ────────────────────────────────────────────────
