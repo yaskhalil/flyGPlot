@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { apiClient } from '../../services/apiClient';
-import { ExternalLink, Loader, Info, ChevronDown, ChevronRight } from 'lucide-react';
+import { ExternalLink, Loader, Info, AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react';
 
 interface GeneDetailsViewProps {
   isEmbedded?: boolean;
@@ -18,6 +18,10 @@ interface FullMetadata {
   alleles: { allele: string; phenotype: string | null; type: string | null }[];
   orthologs: { species: string; symbol: string; identity: number | null }[];
   source: string;
+  /** True when an annotation list is empty because the lookup failed. */
+  degraded?: boolean;
+  /** Names the annotation lists that failed or were never attempted. */
+  unavailable?: string[];
 }
 
 export function GeneDetailsView({ isEmbedded = false }: GeneDetailsViewProps) {
@@ -306,6 +310,15 @@ export function GeneDetailsView({ isEmbedded = false }: GeneDetailsViewProps) {
                         </div>
                       ) : reagents ? (
                         <>
+                          {reagents.degraded && (
+                            <div className="alert alert-warning" style={{ fontSize: '0.72rem' }}>
+                              <AlertTriangle className="alert-info-icon" size={14} />
+                              <div>
+                                FlyBase did not return reagent data. Any counts below reflect a
+                                failed lookup, not an absence of lines — use the links to check.
+                              </div>
+                            </div>
+                          )}
                           {/* Direct links to FlyBase reagent pages */}
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
                             <a href={reagents.reagentsUrl} target="_blank" rel="noreferrer"
@@ -362,12 +375,24 @@ export function GeneDetailsView({ isEmbedded = false }: GeneDetailsViewProps) {
                   )}
                 </div>
 
-                {/* Empty state */}
+                {/* Empty state — separates "no annotations" from "could not ask",
+                    which the backend now distinguishes via `unavailable`. */}
                 {(!metadata.goTerms?.length && !metadata.alleles?.length && !metadata.orthologs?.length) && (
-                  <div className="alert alert-info">
-                    <Info className="alert-info-icon" size={16} />
-                    <div>FlyBase annotations not available for this gene. Use external links above.</div>
-                  </div>
+                  metadata.degraded ? (
+                    <div className="alert alert-warning">
+                      <AlertTriangle className="alert-info-icon" size={16} />
+                      <div>
+                        Could not retrieve {(metadata.unavailable || []).join(' and ') || 'annotations'} from
+                        FlyBase — this is an upstream failure, not an empty record.
+                        Check the FlyBase links above before concluding this gene has none.
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="alert alert-info">
+                      <Info className="alert-info-icon" size={16} />
+                      <div>FlyBase annotations not available for this gene. Use external links above.</div>
+                    </div>
+                  )
                 )}
               </div>
             ) : (
