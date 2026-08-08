@@ -106,15 +106,34 @@ router.get('/metadata', async (req, res) => {
 
   // Fetch annotations in parallel (with timeouts)
   let goTerms = [], alleles = [], orthologs = [];
+  // A rejected annotation fetch and a gene with no annotations both yield an
+  // empty array. Without tracking which happened, an upstream outage renders as
+  // a confident "this gene has nothing" — the failure that motivated the
+  // degraded contract in getReagents.
+  const failed = [];
 
   if (fbgn && source === 'flybase') {
-    [goTerms, alleles, orthologs] = await Promise.all([
-      getGoTerms(fbgn).catch(() => []),
-      getAlleles(fbgn).catch(() => []),
-      getOrthologs(fbgn).catch(() => []),
+    const settled = await Promise.allSettled([
+      getGoTerms(fbgn),
+      getAlleles(fbgn),
+      getOrthologs(fbgn),
     ]);
+    const names = ['goTerms', 'alleles', 'orthologs'];
+    [goTerms, alleles, orthologs] = settled.map((r, i) => {
+      if (r.status === 'fulfilled') return r.value;
+      failed.push(names[i]);
+      return [];
+    });
   } else if (fbgn) {
-    try { orthologs = await ensOrthologs(fbgn); } catch {}
+    // Ensembl carries orthologs but not FlyBase GO terms or alleles. Those are
+    // not empty here, they are unasked — reporting them as [] with no marker
+    // would be the same false negative one layer up.
+    failed.push('goTerms', 'alleles');
+    try {
+      orthologs = await ensOrthologs(fbgn);
+    } catch {
+      failed.push('orthologs');
+    }
   }
 
   res.json({
@@ -128,6 +147,9 @@ router.get('/metadata', async (req, res) => {
     alleles,
     orthologs,
     source,
+    degraded: failed.length > 0,
+    // Names the empty arrays that are empty because the lookup failed.
+    unavailable: failed,
   });
 });
 
