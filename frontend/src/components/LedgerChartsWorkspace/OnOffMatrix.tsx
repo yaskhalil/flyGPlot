@@ -8,12 +8,23 @@ import { downloadCSV } from '../../utils/csv';
 
 const STAGES = ['P15', 'P30', 'P40', 'P50', 'P70', 'Adult'];
 
+// How a gene's per-stage ON calls collapse into a single call when several
+// stages are selected. A driver line has to hold up at every stage you plan to
+// dissect at, so "all" is the default — "any" is exploratory only.
+type StageMode = 'all' | 'any';
+
+const STAGE_MODE_LABEL: Record<StageMode, string> = {
+  all: 'ON at ALL selected stages',
+  any: 'ON at ANY selected stage',
+};
+
 export function OnOffMatrix() {
   const { selectedGenes, geneCache, stagesList, fetchGeneData } = useAppStore();
   const stages = stagesList.length > 0 ? stagesList : STAGES;
 
   const [probThreshold, setProbThreshold] = useState(0.5);
   const [selectedStages, setSelectedStages] = useState<string[]>([stages[0] || 'P15']);
+  const [stageMode, setStageMode] = useState<StageMode>('all');
   const [cellFilter, setCellFilter] = useState('');
 
   // Pre-load gene data if not cached
@@ -31,46 +42,70 @@ export function OnOffMatrix() {
     );
   };
 
-  // Build the ON/OFF matrix
+  // Build the ON/OFF matrix.
+  //
+  // Each (gene, cell) is scored per stage and only then collapsed, so a gene ON
+  // at P15 but OFF by Adult never reads as a clean ON. Cells that switch during
+  // the selected window are tracked separately as 'partial' — for marker
+  // selection that is a distinct answer from ON, not a rounding case.
   const matrix = useMemo(() => {
-    const rows: { gene: string; onCells: Set<string>; offCells: Set<string>; onCount: number }[] = [];
+    type Row = {
+      gene: string;
+      call: Map<string, 'on' | 'partial' | 'off'>;
+      onCount: number;
+      partialCount: number;
+    };
+    const rows: Row[] = [];
 
     for (const gene of selectedGenes) {
       const data = geneCache[gene];
       if (!data?.mixture_modeling) continue;
 
-      const onCells = new Set<string>();
-      const offCells = new Set<string>();
+      // cell -> [stages scored, stages passing threshold]
+      const tally = new Map<string, { scored: number; on: number }>();
 
       for (const stage of selectedStages) {
         const stageProbs = data.mixture_modeling[stage];
         if (!stageProbs) continue;
         for (const [cell, prob] of Object.entries(stageProbs)) {
-          if (prob >= probThreshold) {
-            onCells.add(cell);
-          } else {
-            offCells.add(cell);
-          }
+          const t = tally.get(cell) || { scored: 0, on: 0 };
+          t.scored += 1;
+          if (prob >= probThreshold) t.on += 1;
+          tally.set(cell, t);
         }
       }
 
-      rows.push({
-        gene,
-        onCells,
-        offCells,
-        onCount: onCells.size,
-      });
+      const call = new Map<string, 'on' | 'partial' | 'off'>();
+      let onCount = 0;
+      let partialCount = 0;
+
+      for (const [cell, t] of tally) {
+        // A cell only counts as ON under 'all' if every stage that actually has
+        // data for it passed. Stages missing this cell are not silently treated
+        // as passing.
+        const isOn = stageMode === 'all' ? t.on === t.scored && t.scored > 0 : t.on > 0;
+        if (isOn) {
+          call.set(cell, 'on');
+          onCount += 1;
+        } else if (t.on > 0) {
+          call.set(cell, 'partial');
+          partialCount += 1;
+        } else {
+          call.set(cell, 'off');
+        }
+      }
+
+      rows.push({ gene, call, onCount, partialCount });
     }
 
     return rows;
-  }, [selectedGenes, geneCache, selectedStages, probThreshold]);
+  }, [selectedGenes, geneCache, selectedStages, probThreshold, stageMode]);
 
   // Determine which cell types to show (filtered + from data)
   const displayCells = useMemo(() => {
     const allCells = new Set<string>();
     for (const row of matrix) {
-      for (const c of row.onCells) allCells.add(c);
-      for (const c of row.offCells) allCells.add(c);
+      for (const c of row.call.keys()) allCells.add(c);
     }
     if (allCells.size === 0) return [];
     let filtered = Array.from(allCells);
@@ -83,15 +118,22 @@ export function OnOffMatrix() {
   const maxOnCount = Math.max(...matrix.map(r => r.onCount), 0);
   const loadedCount = selectedGenes.filter(g => geneCache[g]?.mixture_modeling).length;
 
+  // 1 = ON, 0 = OFF, 0.5 = ON at some but not all selected stages. Encoding
+  // partial as its own value keeps the CSV honest for downstream analysis.
   const handleExport = () => {
     if (matrix.length === 0 || displayCells.length === 0) return;
     const stagesLabel = selectedStages.join('+');
-    let csv = `Gene,TotalON,` + displayCells.join(',') + '\n';
+    let csv = `# stages=${selectedStages.join('|')} rule=${stageMode} threshold=${probThreshold}\n`;
+    csv += `# 1=ON, 0=OFF, 0.5=partial (ON at some but not all selected stages)\n`;
+    csv += `Gene,TotalON,TotalPartial,` + displayCells.join(',') + '\n';
     for (const row of matrix) {
-      const vals = displayCells.map(c => row.onCells.has(c) ? '1' : '0');
-      csv += `${row.gene},${row.onCount},${vals.join(',')}\n`;
+      const vals = displayCells.map(c => {
+        const v = row.call.get(c);
+        return v === 'on' ? '1' : v === 'partial' ? '0.5' : '0';
+      });
+      csv += `${row.gene},${row.onCount},${row.partialCount},${vals.join(',')}\n`;
     }
-    downloadCSV(`onoff_${stagesLabel}_th${probThreshold}.csv`, csv);
+    downloadCSV(`onoff_${stagesLabel}_${stageMode}_th${probThreshold}.csv`, csv);
   };
 
   if (selectedGenes.length === 0) {
@@ -135,6 +177,23 @@ export function OnOffMatrix() {
           </div>
         </div>
 
+        {/* Multi-stage collapse rule */}
+        <div className="form-group" style={{ marginBottom: 0, minWidth: '190px' }}>
+          <label className="form-label">Multi-stage rule</label>
+          <select
+            className="form-input"
+            value={stageMode}
+            onChange={e => setStageMode(e.target.value as StageMode)}
+            disabled={selectedStages.length < 2}
+            title={selectedStages.length < 2
+              ? 'Applies when two or more stages are selected'
+              : STAGE_MODE_LABEL[stageMode]}
+          >
+            <option value="all">{STAGE_MODE_LABEL.all}</option>
+            <option value="any">{STAGE_MODE_LABEL.any}</option>
+          </select>
+        </div>
+
         {/* Threshold slider */}
         <div className="form-group" style={{ marginBottom: 0, minWidth: '140px' }}>
           <label className="form-label">ON Threshold ({probThreshold.toFixed(1)})</label>
@@ -161,6 +220,25 @@ export function OnOffMatrix() {
       {/* ── Summary bar ── */}
       <div style={{ marginBottom: '0.75rem', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
         {loadedCount} genes × {displayCells.length} cell types at {selectedStages.join(', ')} (threshold ≥ {probThreshold.toFixed(1)})
+        {selectedStages.length > 1 && <> — counting ON only when {stageMode === 'all' ? 'every' : 'at least one'} selected stage passes</>}
+        <span style={{ marginLeft: '0.75rem' }}>
+          <span style={{
+            display: 'inline-block', width: '9px', height: '9px', borderRadius: '2px',
+            backgroundColor: 'var(--success)', verticalAlign: 'middle', marginRight: '0.25rem',
+          }} />ON
+          {/* Under the 'any' rule a cell ON at even one stage is ON, so the
+              partial state cannot arise and its key would be noise. */}
+          {stageMode === 'all' && selectedStages.length > 1 && (
+            <>
+              <span style={{
+                display: 'inline-block', width: '9px', height: '9px', borderRadius: '2px',
+                backgroundImage: 'repeating-linear-gradient(45deg, var(--warning, #b45309) 0 2px, transparent 2px 4px)',
+                border: '1px solid var(--border-color)',
+                verticalAlign: 'middle', marginLeft: '0.6rem', marginRight: '0.25rem',
+              }} />partial
+            </>
+          )}
+        </span>
       </div>
 
       {/* ── Matrix ── */}
@@ -191,18 +269,29 @@ export function OnOffMatrix() {
                     {row.onCount}
                   </td>
                   {displayCells.map(c => {
-                    const isOn = row.onCells.has(c);
+                    const state = row.call.get(c) || 'off';
+                    const isOn = state === 'on';
+                    const isPartial = state === 'partial';
                     return (
                       <td key={c} style={{
                         padding: '0.2rem',
                         textAlign: 'center',
-                        backgroundColor: isOn ? 'rgba(15,118,110,0.12)' : 'var(--bg-tertiary)',
+                        backgroundColor: isOn
+                          ? 'rgba(15,118,110,0.12)'
+                          : isPartial ? 'rgba(180,83,9,0.10)' : 'var(--bg-tertiary)',
                         borderLeft: '1px solid var(--border-color)',
                         minWidth: '30px',
-                      }}>
+                      }}
+                        title={`${row.gene} × ${c}: ${isPartial ? 'ON at some but not all selected stages' : state.toUpperCase()}`}
+                      >
                         <span style={{
                           display: 'inline-block', width: '12px', height: '12px', borderRadius: '2px',
                           backgroundColor: isOn ? 'var(--success)' : 'transparent',
+                          // Hatched fill marks a developmentally dynamic call so it
+                          // reads as distinct from a solid ON at a glance.
+                          backgroundImage: isPartial
+                            ? 'repeating-linear-gradient(45deg, var(--warning, #b45309) 0 2px, transparent 2px 4px)'
+                            : undefined,
                           border: isOn ? 'none' : '1px solid var(--border-color)',
                         }} />
                       </td>
